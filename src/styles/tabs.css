@@ -1,0 +1,511 @@
+.tabs {
+  grid-row: 1;
+  display: flex;
+  gap: var(--gx-space-1);
+  min-block-size: 2.75rem;
+  padding: var(--gx-space-2) var(--gx-space-3) 0;
+  overflow-x: auto;
+  background: var(--gx-surface-2);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  max-inline-size: 15rem;
+  border-radius: var(--gx-radius-md) var(--gx-radius-md) 0 0;
+  color: var(--gx-text-muted);
+  transition:
+    background-color 0.2s var(--gx-ease),
+    color 0.2s var(--gx-ease);
+}
+
+.tab:hover {
+  background: var(--gx-surface-3);
+}
+
+.tab.active {
+  color: var(--gx-text);
+  background: var(--gx-terminal-bg);
+}
+
+/* Shown beside the front tab in a split. */
+.tab.in-view {
+  color: var(--gx-text);
+  background: var(--gx-surface-3);
+}
+
+.tab-select,
+.tab-close {
+  font: inherit;
+  font-size: 0.8125rem;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.tab-select {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-block-size: 2.5rem;
+  padding: 0 var(--gx-space-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-log {
+  display: none;
+  flex: none;
+  padding: 0 var(--gx-space-1);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--gx-danger);
+  border: 1px solid currentcolor;
+  border-radius: var(--gx-radius-sm);
+}
+
+.tab[data-logging] .tab-log {
+  display: inline-block;
+}
+
+.tab-mark {
+  flex: none;
+  padding: 0 var(--gx-space-1);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--gx-warning);
+  border: 1px solid currentcolor;
+  border-radius: var(--gx-radius-sm);
+}
+
+/* Typing here also goes to other terminals; framed so that is hard to miss. */
+.terminal[data-mark-broadcast]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--gx-z-splitter);
+  border: 1px solid var(--gx-warning);
+  pointer-events: none;
+}
+
+.tab-dot {
+  flex: none;
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  border-radius: 50%;
+  background: var(--gx-text-subtle);
+}
+
+.tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab[data-state="connecting"] .tab-dot {
+  background: var(--gx-warning);
+  animation: tab-pulse 1.2s var(--gx-ease) infinite alternate;
+}
+
+@keyframes tab-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
+.tab[data-state="live"] .tab-dot {
+  background: var(--gx-accent);
+}
+
+.tab[data-state="failed"] .tab-dot,
+.tab[data-state="ended"][data-lost] .tab-dot {
+  background: var(--gx-danger);
+}
+
+.tab[data-state="ended"]:not([data-lost]) .tab-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--gx-text-subtle);
+}
+
+.tab[data-state="ended"] .tab-select,
+.tab[data-state="failed"] .tab-select {
+  color: var(--gx-text-subtle);
+}
+
+.tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin-inline-end: var(--gx-space-1);
+  border-radius: var(--gx-radius-md);
+  font-size: 0.875rem;
+  line-height: 1;
+  opacity: 0.6;
+  transition:
+    opacity 120ms var(--gx-ease),
+    background-color 120ms var(--gx-ease);
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close,
+.tab-close:focus-visible {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  background: var(--gx-hover);
+}
+
+.terminals {
+  grid-row: 2;
+  position: relative;
+  min-block-size: 0;
+}
+
+.terminal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container: terminal / inline-size;
+}
+
+/* Terminal output and pane splits stay left to right in right-to-left text. */
+.terminal,
+.pane-group {
+  direction: ltr;
+}
+
+.pane-group {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.pane-split {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.pane-group > .pane-split {
+  flex: 1 1 0;
+}
+
+.pane-split[data-dir="column"] {
+  flex-direction: column;
+}
+
+/* flex-grow is set per split from its ratio. */
+.pane-split > .terminal,
+.pane-split > .pane-split {
+  position: relative;
+  inset: auto;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.pane-split > .pane-splitter {
+  flex: none;
+  grid-row: auto;
+}
+
+/* The pane that receives typing in a split. */
+.terminal[data-pane-focus]::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: var(--gx-z-splitter);
+  block-size: 2px;
+  background: var(--gx-accent);
+  pointer-events: none;
+}
+
+.terminal-backdrop {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.terminal-screen {
+  position: absolute;
+  inset: var(--gx-space-2) 0 0 var(--gx-space-3);
+  transition: opacity 0.4s var(--gx-ease);
+}
+
+.terminal[data-ended="error"] .terminal-screen {
+  opacity: 0.6;
+}
+
+/* Connection failed / lost: pinned over the top of the output, which stays scrollable below. */
+.terminal-banner {
+  direction: var(--gx-dir);
+  position: absolute;
+  inset-block-start: var(--gx-space-3);
+  inset-inline: var(--gx-space-4) 1.75rem;
+  z-index: var(--gx-z-drop);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--gx-space-3);
+  max-inline-size: 46rem;
+  margin-inline: auto;
+  padding: var(--gx-space-3) var(--gx-space-3) var(--gx-space-3) var(--gx-space-4);
+  border: 1px solid var(--gx-border-strong);
+  border-radius: var(--gx-radius-lg);
+  background: var(--gx-surface-2);
+  color: var(--gx-text);
+  box-shadow: var(--gx-shadow-lg);
+  animation: terminal-banner-in 0.35s var(--gx-ease);
+}
+
+.terminal-banner[data-tone="error"] {
+  border-color: var(--gx-danger);
+  background: var(--gx-danger-surface);
+}
+
+@keyframes terminal-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+.terminal-banner-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: 50%;
+  font-size: 1.125rem;
+  color: var(--gx-text-muted);
+  background: var(--gx-surface-3);
+}
+
+.terminal-banner[data-tone="error"] .terminal-banner-icon {
+  color: var(--gx-danger);
+  background: var(--gx-surface-1);
+}
+
+.terminal-banner-text {
+  display: grid;
+  gap: var(--gx-space-1);
+  min-inline-size: 0;
+}
+
+.terminal-banner-text strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.terminal-banner[data-tone="error"] .terminal-banner-text strong {
+  color: var(--gx-danger);
+}
+
+.terminal-banner-text p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--gx-text-muted);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.terminal-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-2);
+}
+
+.terminal-banner-actions .button {
+  gap: var(--gx-space-2);
+}
+
+@container terminal (max-width: 44rem) {
+  .terminal-banner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .terminal-banner-actions {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}
+
+/* rz / sz: pinned to the bottom so the command that started it stays visible. */
+.zmodem-transfer {
+  inset-block: auto var(--gx-space-4);
+  max-inline-size: 36rem;
+  animation-name: zmodem-transfer-in;
+}
+
+@keyframes zmodem-transfer-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.zmodem-transfer progress {
+  inline-size: 100%;
+  block-size: 0.375rem;
+  accent-color: var(--gx-accent);
+}
+
+/* Jumps between recoverable clears; sits left of the scrollbar and overview ruler. */
+.terminal-marks {
+  position: absolute;
+  inset-block-start: var(--gx-space-2);
+  inset-inline-end: 1.5rem;
+  z-index: var(--gx-z-splitter);
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  padding: 0.125rem var(--gx-space-1);
+  font-size: 0.75rem;
+  color: var(--gx-text-muted);
+  background: var(--gx-surface-2);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-sm);
+  opacity: 0.85;
+  transition: opacity 0.2s var(--gx-ease);
+}
+
+.terminal-marks:hover,
+.terminal-marks:focus-within {
+  opacity: 1;
+}
+
+.terminal-marks .icon-button {
+  min-inline-size: 1.5rem;
+  padding-inline: var(--gx-space-1);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gx-space-3);
+  block-size: 100%;
+  max-inline-size: 36rem;
+  padding: var(--gx-space-6);
+}
+
+.empty h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--gx-text-muted);
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-2);
+  margin-block-start: var(--gx-space-2);
+}
+
+.statusbar {
+  padding: var(--gx-space-1) var(--gx-space-3);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gx-text-muted);
+  background: var(--gx-surface-2);
+  border-block-start: 1px solid var(--gx-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar[data-tone="error"],
+.statusbar-text[data-tone="error"] {
+  color: var(--gx-danger);
+}
+
+.statusbar-split {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-3);
+}
+
+.statusbar-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar-items {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--gx-space-1);
+}
+
+.statusbar-items:empty {
+  display: none;
+}
+
+.statusbar-items + .statusbar-items:not(:empty) {
+  padding-inline-start: var(--gx-space-2);
+  border-inline-start: 1px solid var(--gx-border);
+}
+
+.statusbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  max-width: 28ch;
+  padding: 0 var(--gx-space-2);
+  font: inherit;
+  line-height: 1.6;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: var(--gx-radius-sm);
+}
+
+/* `user@192.168.45.128 · ئۇلاندى` runs past 28ch and the state word is cut. */
+:root[lang="ug"] .statusbar-item {
+  max-width: 34ch;
+}
+
+.statusbar-item[hidden] {
+  display: none;
+}
+
+.statusbar-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+button.statusbar-item {
+  cursor: pointer;
+}
+
+button.statusbar-item:hover,
+button.statusbar-item:focus-visible {
+  outline: none;
+  color: var(--gx-text);
+  background: var(--gx-hover);
+}
+
+.statusbar-item[data-tone="warn"] {
+  color: var(--gx-warning);
+}
+
+.statusbar-item[data-tone="error"] {
+  color: var(--gx-danger);
+}

@@ -1,0 +1,877 @@
+/* The advanced status window: one server per window, a vertical page nav and roomy cards. */
+.adv {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-block-size: 0;
+  background: var(--gx-surface-0);
+}
+
+.adv > .panel-empty {
+  padding: var(--gx-space-6) var(--gx-space-5);
+}
+
+.adv-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-3) var(--gx-space-6);
+  padding: var(--gx-space-3) var(--gx-space-5);
+  background: var(--gx-surface-1);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.adv-title {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-3);
+  min-inline-size: 0;
+}
+
+.adv-host {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: var(--gx-text);
+}
+
+.adv-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--gx-space-1);
+  padding: 0 var(--gx-space-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  color: var(--gx-text-subtle);
+  background: var(--gx-surface-2);
+  border-radius: 999px;
+}
+
+.adv-badge::before {
+  content: "";
+  inline-size: 0.375rem;
+  block-size: 0.375rem;
+  background: currentcolor;
+  border-radius: 50%;
+}
+
+.adv-badge[data-state="live"] {
+  color: var(--gx-success);
+  background: var(--gx-green-900);
+}
+
+.adv-badge[data-state="error"] {
+  color: var(--gx-warning);
+}
+
+.adv-badge[data-state="ended"] {
+  color: var(--gx-danger);
+  background: var(--gx-danger-surface);
+}
+
+.adv-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-2) var(--gx-space-6);
+  margin: 0 0 0 auto;
+  font-size: 0.8125rem;
+}
+
+.adv-summary-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-inline-size: 0;
+}
+
+.adv-summary dt {
+  color: var(--gx-text-subtle);
+}
+
+.adv-summary dd {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  margin: 0;
+  white-space: nowrap;
+  color: var(--gx-text);
+}
+
+.adv-copy {
+  min-block-size: 1.5rem;
+  min-inline-size: 1.5rem;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+.adv-banner {
+  margin: 0;
+  padding: var(--gx-space-2) var(--gx-space-5);
+  font-size: 0.8125rem;
+  color: var(--gx-warning);
+  background: var(--gx-surface-2);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.adv-body {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  flex: 1;
+  min-block-size: 0;
+}
+
+.adv-nav {
+  padding: var(--gx-space-3) var(--gx-space-2);
+  overflow-y: auto;
+  background: var(--gx-surface-1);
+  border-inline-end: 1px solid var(--gx-border);
+}
+
+.adv-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-1);
+}
+
+.adv-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-3);
+  min-block-size: 2.25rem;
+  padding: 0 var(--gx-space-3);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: start;
+  color: var(--gx-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--gx-radius-md);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--gx-ease),
+    color 0.15s var(--gx-ease);
+}
+
+.adv-tab .gx-icon {
+  inline-size: 1rem;
+  text-align: center;
+  color: var(--gx-text-subtle);
+  transition: color 0.15s var(--gx-ease);
+}
+
+.adv-tab:hover {
+  color: var(--gx-text);
+  background: var(--gx-hover);
+}
+
+.adv-tab[aria-selected="true"] {
+  color: var(--gx-text);
+  background: var(--gx-selected);
+}
+
+.adv-tab[aria-selected="true"] .gx-icon {
+  color: var(--gx-accent-strong);
+}
+
+.adv-tab:focus-visible,
+.adv-panel:focus-visible {
+  outline-offset: -2px;
+}
+
+.adv-content {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.adv-panel {
+  flex: 1;
+  min-block-size: 0;
+  padding: var(--gx-space-5);
+  overflow-y: auto;
+  animation: adv-page-in 0.25s var(--gx-ease-decelerate);
+}
+
+/* The process manager scrolls its own table, so its page fills the height instead. */
+.adv-panel[data-page="processes"] {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+@keyframes adv-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
+.adv-overview,
+.adv-stack,
+.adv-network {
+  max-inline-size: 90rem;
+}
+
+.adv-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  gap: var(--gx-space-4);
+  align-items: start;
+}
+
+.adv-stack,
+.adv-network {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-4);
+}
+
+.adv-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-3);
+  min-inline-size: 0;
+  padding: var(--gx-space-4);
+  background: var(--gx-surface-1);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-lg);
+}
+
+.adv-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gx-space-3);
+  min-inline-size: 0;
+}
+
+.adv-card-title {
+  flex: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gx-text);
+}
+
+.adv-card-meta {
+  flex: none;
+  max-inline-size: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--gx-text-muted);
+}
+
+.adv-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gx-text-subtle);
+}
+
+.adv-facts,
+.proc-facts {
+  gap: var(--gx-space-2) var(--gx-space-5);
+}
+
+.adv-facts dd,
+.proc-facts dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tables run to the card's edges so their columns line up with its padding. */
+.adv-table-wrap {
+  max-block-size: 20rem;
+  margin-inline: calc(var(--gx-space-4) * -1);
+  border-block-start: 1px solid var(--gx-border);
+}
+
+.adv-table thead th {
+  padding: var(--gx-space-2) var(--gx-space-4);
+}
+
+.adv-table td {
+  padding: var(--gx-space-1) var(--gx-space-4);
+}
+
+.adv-chart {
+  block-size: 6rem;
+}
+
+.adv-chart-tall {
+  block-size: 12rem;
+}
+
+.adv-cores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--gx-space-2) var(--gx-space-4);
+}
+
+/* Memory: one bar split into parts that always add up to the total. */
+.adv [data-part="used"] {
+  --part-color: var(--gx-purple-400);
+}
+
+.adv [data-part="buffers"] {
+  --part-color: var(--gx-blue-400);
+}
+
+.adv [data-part="cached"] {
+  --part-color: var(--gx-amber-400);
+}
+
+.adv [data-part="free"] {
+  --part-color: var(--gx-meter-track);
+}
+
+.mem-stack {
+  position: relative;
+  block-size: 0.75rem;
+  overflow: hidden;
+  background: var(--gx-meter-track);
+  border-radius: 999px;
+}
+
+/* Full-width segments moved and scaled into place, so only transform animates. */
+.mem-part {
+  position: absolute;
+  inset: 0;
+  background: var(--part-color);
+  transform: translateX(calc(var(--start, 0) * 100%)) scaleX(var(--size, 0));
+  transform-origin: left center;
+  transition: transform 0.6s var(--gx-ease);
+}
+
+:root[dir="rtl"] .mem-part {
+  transform: translateX(calc(var(--start, 0) * -100%)) scaleX(var(--size, 0));
+  transform-origin: right center;
+}
+
+.mem-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--gx-space-2) var(--gx-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+/* ئىشلىتىلگەن and the value beside it need more than 8rem; the label would run under the value. */
+:root[lang="ug"] .mem-legend {
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+}
+
+.mem-legend-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+.mem-swatch {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  background: var(--part-color);
+  border-radius: 0.125rem;
+}
+
+.mem-legend-item[data-part="free"] .mem-swatch {
+  box-shadow: inset 0 0 0 1px var(--gx-border-strong);
+}
+
+.mem-legend-label {
+  color: var(--gx-text-muted);
+}
+
+.mem-legend-value {
+  font-weight: 600;
+  color: var(--gx-text);
+}
+
+/* Disks */
+.adv-disks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--gx-space-3);
+}
+
+.adv-disk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gx-space-1);
+  min-inline-size: 0;
+  padding: var(--gx-space-4) var(--gx-space-3);
+  text-align: center;
+  background: var(--gx-surface-1);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-lg);
+}
+
+.adv-disk-mount {
+  max-inline-size: 100%;
+  margin: var(--gx-space-2) 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--gx-text);
+}
+
+.adv-disk-device,
+.adv-disk-size {
+  max-inline-size: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  color: var(--gx-text-muted);
+}
+
+.adv-disk-size {
+  color: var(--gx-text-subtle);
+}
+
+/* `/dev/sda2 · ext4` would show as `dev/sda2 · ext4/` in right-to-left text, and lose its start
+   when cut. */
+:root[dir="rtl"] .adv-disk-device {
+  unicode-bidi: plaintext;
+}
+
+.adv-disk .meter-row {
+  align-self: stretch;
+  margin-block-start: var(--gx-space-2);
+  text-align: start;
+}
+
+.ring {
+  position: relative;
+  inline-size: 7.5rem;
+  aspect-ratio: 1;
+}
+
+.ring-svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--gx-meter-track);
+}
+
+.ring-arc {
+  fill: none;
+  stroke: var(--gx-meter-ok);
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset 0.6s var(--gx-ease),
+    stroke 0.3s var(--gx-ease);
+}
+
+.ring[data-level="high"] .ring-arc {
+  stroke: var(--gx-meter-high);
+}
+
+.ring[data-level="full"] .ring-arc {
+  stroke: var(--gx-meter-full);
+}
+
+.ring-value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--gx-text);
+}
+
+.adv-disk-table .col-mount {
+  inline-size: 22%;
+}
+
+.adv-disk-table .col-type {
+  inline-size: 5.5rem;
+}
+
+.adv-disk-table .col-size {
+  inline-size: 6rem;
+}
+
+.adv-disk-table .col-share {
+  inline-size: 5rem;
+}
+
+/* Network */
+.adv-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: var(--gx-space-4);
+}
+
+.adv-row-button,
+.link-button {
+  max-inline-size: 100%;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.adv-row-button.mono,
+.link-button.mono {
+  font-family: var(--gx-font-mono);
+}
+
+.adv-row-button {
+  inline-size: 100%;
+  color: var(--gx-text);
+}
+
+.adv-row-button:hover,
+.link-button:hover:not(:disabled) {
+  color: var(--gx-accent-strong);
+  text-decoration: underline;
+}
+
+.adv-row-button[aria-pressed="true"] {
+  font-weight: 600;
+  color: var(--gx-accent-strong);
+}
+
+/* Plaintext makes `start` the left edge for a Latin name; in right-to-left text it still lines up
+   with its column. */
+:root[dir="rtl"] :is(.adv-row-button, .link-button).mono {
+  text-align: right;
+}
+
+.adv-table tr[aria-current="true"],
+.proc-table tr[aria-current="true"] {
+  background: var(--gx-selected);
+}
+
+.link-button {
+  color: var(--gx-accent-strong);
+}
+
+.link-button:disabled {
+  color: var(--gx-text);
+  cursor: default;
+}
+
+.adv-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-2);
+}
+
+/* Doubled class to beat the base input rule, which carries a :not() and a type. */
+.adv-filter .adv-filter-search,
+.proc-toolbar .proc-search {
+  flex: 1 1 14rem;
+  inline-size: auto;
+  min-block-size: 2rem;
+  font-size: 0.8125rem;
+}
+
+.adv-filter-select,
+.proc-toolbar select {
+  flex: none;
+  inline-size: auto;
+  min-block-size: 2rem;
+  font-size: 0.8125rem;
+}
+
+.adv-port-table .col-proto {
+  inline-size: 4.5rem;
+}
+
+.adv-port-table .col-port,
+.adv-port-table .col-pid {
+  inline-size: 5rem;
+}
+
+/* Process manager */
+.proc-manager {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.proc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-3) var(--gx-space-5);
+  background: var(--gx-surface-1);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.proc-search-wrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 16rem;
+  align-items: center;
+  max-inline-size: 28rem;
+}
+
+.proc-toolbar .proc-search-wrap > .gx-icon {
+  position: absolute;
+  inset-inline-start: var(--gx-space-3);
+  font-size: 0.75rem;
+  color: var(--gx-text-subtle);
+  pointer-events: none;
+}
+
+.proc-toolbar .proc-search {
+  padding-inline-start: 2rem;
+}
+
+.proc-count {
+  margin-inline-start: auto;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--gx-text-muted);
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 0.125rem;
+  background: var(--gx-surface-2);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-md);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-block-size: 1.75rem;
+  padding: 0 var(--gx-space-3);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gx-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--gx-radius-sm);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--gx-ease),
+    color 0.15s var(--gx-ease);
+}
+
+.segment:hover {
+  color: var(--gx-text);
+}
+
+.segment[aria-pressed="true"] {
+  color: var(--gx-text);
+  background: var(--gx-surface-3);
+}
+
+.segment[aria-pressed="true"] .gx-icon {
+  color: var(--gx-accent-strong);
+}
+
+.proc-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.proc-wrap:focus-visible,
+.proc-detail:focus-visible {
+  outline-offset: -2px;
+}
+
+.proc-table td {
+  padding-block: 0.3125rem;
+}
+
+/* Tree depth indents the name only, so the other columns stay in their lanes. */
+.proc-table td.proc-name {
+  padding-inline-start: calc(var(--gx-space-3) + var(--depth, 0) * 1rem);
+}
+
+/* A Latin name cut short in right-to-left text keeps its start, and still lines up on the right. */
+:root[dir="rtl"] .proc-table td.proc-name {
+  unicode-bidi: plaintext;
+  text-align: right;
+}
+
+.proc-table .col-pid,
+.proc-table .col-cpu,
+.proc-table .col-state {
+  inline-size: 4.5rem;
+}
+
+.proc-table .col-user {
+  inline-size: 6.5rem;
+}
+
+.proc-table .col-mem,
+.proc-table .col-start {
+  inline-size: 5.5rem;
+}
+
+.proc-table .col-threads,
+.proc-table .col-nice {
+  inline-size: 3.75rem;
+}
+
+.proc-state {
+  display: inline-block;
+  padding: 0 var(--gx-space-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  color: var(--gx-text-muted);
+  background: var(--gx-surface-3);
+  border-radius: 999px;
+}
+
+.proc-state[data-group="running"] {
+  color: var(--gx-success);
+  background: var(--gx-green-900);
+}
+
+.proc-state[data-group="zombie"] {
+  color: var(--gx-danger);
+  background: var(--gx-danger-surface);
+}
+
+.proc-state[data-group="stopped"] {
+  color: var(--gx-warning);
+}
+
+.proc-state[data-group="other"] {
+  color: var(--gx-text-subtle);
+}
+
+.proc-detail {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow-y: auto;
+  background: var(--gx-surface-1);
+  border-inline-start: 1px solid var(--gx-border);
+}
+
+.proc-detail > .panel-empty {
+  padding: var(--gx-space-5) var(--gx-space-4);
+}
+
+.proc-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-3);
+  padding: var(--gx-space-4);
+}
+
+.proc-detail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-inline-size: 0;
+}
+
+.proc-detail-name {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--gx-text);
+}
+
+.proc-cmd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gx-space-2);
+}
+
+.proc-cmd {
+  max-block-size: 12rem;
+  margin: 0;
+  padding: var(--gx-space-2) var(--gx-space-3);
+  overflow: auto;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--gx-text);
+  background: var(--gx-surface-0);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-sm);
+  user-select: text;
+}
+
+.proc-cmd.muted {
+  font-family: var(--gx-font-ui);
+  word-break: normal;
+  color: var(--gx-text-subtle);
+}
+
+.proc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-2);
+  padding-block-start: var(--gx-space-3);
+  border-block-start: 1px solid var(--gx-border);
+}
+
+/* Narrow windows: icon-only page nav, and process details move under the table. */
+@media (max-width: 60rem) {
+  .adv-body {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+  }
+
+  .adv-tab {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .adv-tab span {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .proc-main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 40%);
+  }
+
+  .proc-detail {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--gx-border);
+  }
+}

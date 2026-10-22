@@ -1,0 +1,471 @@
+/* Command bar under the terminal. */
+.gx-command-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-1);
+  padding: var(--gx-space-1) var(--gx-space-2);
+  background: var(--gx-surface-2);
+  border-block-start: 1px solid var(--gx-border);
+}
+
+.cmd-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--gx-space-2);
+}
+
+.cmd-input {
+  flex: 1 1 20rem;
+  min-inline-size: 12rem;
+  min-block-size: 2rem;
+  padding-block: var(--gx-space-1);
+  resize: none;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* The hint stays on the one row instead of wrapping under a scrollbar. */
+.cmd-input:placeholder-shown {
+  overflow: hidden;
+}
+
+.cmd-input::placeholder {
+  white-space: nowrap;
+}
+.cmd-send {
+  min-block-size: 2rem;
+}
+
+.cmd-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+.cmd-group {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.cmd-tool {
+  inline-size: 2rem;
+  min-inline-size: 2rem;
+  padding: 0;
+}
+
+.cmd-group + .cmd-group {
+  padding-inline-start: var(--gx-space-2);
+  border-inline-start: 1px solid var(--gx-border);
+}
+
+.cmd-find {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+.cmd-find-input {
+  flex: 0 1 22rem;
+  min-block-size: 1.75rem;
+  padding-block: 0.125rem;
+  font-size: 0.8125rem;
+}
+
+.cmd-find .check {
+  font-size: 0.8125rem;
+}
+
+.cmd-find-count {
+  min-inline-size: 5rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gx-text-muted);
+}
+
+/* History dialog. */
+.gx-dialog[data-dialog="history"] {
+  block-size: min(40rem, calc(100dvh - 3rem));
+}
+
+.gx-dialog[data-dialog="history"] .dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-2);
+  overflow: hidden;
+}
+
+.cmd-history-head {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-3);
+}
+
+.cmd-history-head input {
+  flex: 1;
+}
+
+.cmd-history-count {
+  margin: 0;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  color: var(--gx-text-muted);
+}
+
+.cmd-history-list,
+.fav-list {
+  flex: 1;
+  min-block-size: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.cmd-history-list {
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-sm);
+  background: var(--gx-surface-1);
+}
+
+.cmd-history-item,
+.fav-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-2);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.cmd-history-item:hover,
+.fav-item:hover {
+  background: var(--gx-surface-2);
+}
+
+.cmd-history-text,
+.fav-command {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.cmd-history-actions,
+.fav-actions {
+  display: flex;
+  flex: none;
+  gap: 0.125rem;
+}
+
+.cmd-history-empty,
+.fav-empty {
+  padding: var(--gx-space-4) var(--gx-space-3);
+  font-size: 0.875rem;
+  color: var(--gx-text-muted);
+}
+
+/* Command console panel: favorites and the command editor, side by side when there is room. */
+.gx-panel.cmd-console {
+  display: grid;
+  grid-template-columns: var(--cmd-favorites-width, 22rem) 1px minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  background: var(--gx-surface-1);
+}
+
+.cmd-console-splitter {
+  position: relative;
+  z-index: var(--gx-z-splitter);
+  background: var(--gx-border);
+  cursor: col-resize;
+  touch-action: none;
+  transition: background-color 0.2s var(--gx-ease);
+}
+
+.cmd-console-splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0 -3px;
+}
+
+.cmd-console-splitter:hover,
+.cmd-console-splitter:focus-visible,
+.cmd-console-splitter.dragging {
+  outline: none;
+  background: var(--gx-accent);
+}
+
+@media (max-width: 767px) {
+  .gx-panel.cmd-console {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1px minmax(0, 1fr);
+  }
+
+  .cmd-console-splitter {
+    cursor: row-resize;
+  }
+
+  .cmd-console-splitter::before {
+    inset: -3px 0;
+  }
+}
+
+.cmd-pane {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  background: var(--gx-surface-1);
+}
+
+.cmd-pane-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-1) var(--gx-space-2);
+  padding: var(--gx-space-1) var(--gx-space-2);
+  background: var(--gx-surface-2);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.cmd-pane-title {
+  margin: 0;
+  margin-inline-end: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.cmd-pane-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gx-space-1);
+}
+
+.cmd-fav-head {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-1) var(--gx-space-2);
+}
+
+.cmd-fav-search {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 1.75rem;
+  padding-block: 0.125rem;
+  font-size: 0.8125rem;
+}
+
+.cmd-fav-count {
+  margin: 0;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--gx-text-muted);
+}
+
+.cmd-fav-error {
+  margin: 0 var(--gx-space-2) var(--gx-space-1);
+  font-size: 0.8125rem;
+  color: var(--gx-danger);
+}
+
+.fav-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.fav-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--gx-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.fav-folder {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fav-folder-head {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  min-block-size: 1.75rem;
+}
+
+.fav-folder-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  min-inline-size: 0;
+  padding: 0.125rem var(--gx-space-1);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: start;
+  color: var(--gx-text);
+  background: none;
+  border: 0;
+  border-radius: var(--gx-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s var(--gx-ease);
+}
+
+.fav-folder-toggle:hover {
+  background: var(--gx-hover);
+}
+
+.fav-folder-toggle:disabled {
+  cursor: default;
+}
+
+.fav-folder-caret {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--gx-text-muted);
+}
+
+.fav-folder-caret svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.fav-folder-name {
+  flex: 1;
+  min-inline-size: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fav-folder-count {
+  flex: none;
+  padding: 0 var(--gx-space-1);
+  font-size: 0.6875rem;
+  color: var(--gx-text-subtle);
+  background: var(--gx-surface-2);
+  border-radius: var(--gx-radius-sm);
+}
+
+.fav-sublist {
+  margin: 0;
+  padding: 0 0 var(--gx-space-2) var(--gx-space-4);
+  list-style: none;
+}
+
+.cmd-editor-host {
+  flex: 1;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.cmd-editor-host .cm-editor {
+  block-size: 100%;
+  font-size: 0.8125rem;
+}
+
+/* Command completion popup */
+.gx-completion {
+  position: fixed;
+  /* Screen coordinates, so physical sides. */
+  left: var(--x, 0);
+  top: var(--y, 0);
+  z-index: var(--gx-z-menu);
+  min-inline-size: 14rem;
+  max-inline-size: min(36rem, calc(100vw - 0.5rem));
+  max-block-size: min(20rem, var(--max-h, 20rem));
+  padding: var(--gx-space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--gx-surface-2);
+  border: 1px solid var(--gx-border-strong);
+  border-radius: var(--gx-radius-md);
+  box-shadow: var(--gx-shadow-lg);
+}
+
+.gx-completion-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-block-size: 1.75rem;
+  padding: 0 var(--gx-space-2);
+  border-radius: var(--gx-radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s var(--gx-ease);
+}
+
+.gx-completion-icon {
+  flex: none;
+  inline-size: 1rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--gx-text-subtle);
+}
+
+.gx-completion-icon[data-kind="folder-simple"] {
+  color: var(--gx-accent-strong);
+}
+
+.gx-completion-item:hover,
+.gx-completion-item[aria-selected="true"] {
+  background: var(--gx-selected);
+}
+
+.gx-completion-text {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-completion-icon[data-kind="git-branch"] {
+  color: var(--gx-syn-keyword, var(--gx-accent));
+}
+
+.gx-completion-icon[data-kind="flag"] {
+  color: var(--gx-warning);
+}
+
+.gx-completion-detail {
+  flex: 0 1 auto;
+  max-inline-size: 60%;
+  font-size: 0.75rem;
+  color: var(--gx-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-completion-item[aria-selected="true"] .gx-completion-detail {
+  color: var(--gx-text-muted);
+}
+
+.gx-completion-badge {
+  flex: none;
+  padding: 0.0625rem var(--gx-space-1);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gx-text-subtle);
+  background: var(--gx-surface-3);
+  border-radius: var(--gx-radius-sm);
+}

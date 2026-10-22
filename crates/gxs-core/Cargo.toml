@@ -1,0 +1,38 @@
+[package]
+name = "gxs-core"
+description = "GladosXshell core: SSH, SFTP, local PTY, output pump, known hosts, profiles, monitoring"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+# ring instead of aws-lc-rs: aws-lc-sys needs NASM on Windows.
+russh = { version = "=0.63.3", default-features = false, features = ["flate2", "ring", "rsa"] }
+portable-pty = "=0.9.0"
+bytes = "=1.12.1"
+russh-sftp = "=3.0.1"
+tokio-util = { version = "=0.7.19", default-features = false }
+base64 = "=0.22.1"
+zeroize = { version = "=1.9.0", features = ["serde"] }
+encoding_rs = "=0.8.35"
+# Already built for russh; seeds key generation.
+rand = { version = "=0.10.3", features = ["thread_rng"] }
+argon2 = { version = "=0.6.0", default-features = false, features = ["alloc"] }
+ring = "=0.17.14"
+# No libudev on Linux; ports are listed from sysfs.
+serialport = { version = "=4.10.1", default-features = false }
+# FinalShell password import; both already built for russh.
+des = "=0.9.0"
+md5 = "=0.8.1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_Globalization", "Win32_Security_Cryptography", "Win32_Storage_FileSystem", "Win32_System_Registry"] }
+
+[dev-dependencies]
+tempfile = "=3.27.0"

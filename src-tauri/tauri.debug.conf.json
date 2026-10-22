@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GladosXshell Debug",
+  "identifier": "com.gladosx.shell.debug",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "GladosXshell（调试版）",
+        "width": 1200,
+        "height": 760,
+        "minWidth": 720,
+        "minHeight": 420
+      }
+    ]
+  }
+}

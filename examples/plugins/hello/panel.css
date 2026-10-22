@@ -1,0 +1,104 @@
+/* Colours and fonts come from the app's --gx-* tokens, which follow the current theme. */
+:root {
+  color-scheme: dark light;
+}
+
+body {
+  margin: 0;
+  background: var(--gx-surface-1);
+  color: var(--gx-text);
+  font: 0.875rem / 1.5 var(--gx-font-ui, system-ui, sans-serif);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.75rem;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 1rem;
+}
+
+.icon {
+  display: inline-flex;
+  color: var(--gx-accent);
+}
+
+.icon svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+h2 {
+  font-size: 0.75rem;
+  color: var(--gx-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+p {
+  margin: 0;
+  color: var(--gx-text-muted);
+}
+
+button {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--gx-border-strong);
+  border-radius: var(--gx-radius-sm, 4px);
+  background: var(--gx-accent);
+  color: var(--gx-on-accent);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:hover {
+  background: var(--gx-accent-strong);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--gx-accent);
+  outline-offset: 2px;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-self: stretch;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--gx-border);
+}
+
+li span:last-child {
+  color: var(--gx-text-subtle);
+  font-size: 0.75rem;
+}

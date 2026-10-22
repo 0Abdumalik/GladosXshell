@@ -1,0 +1,677 @@
+/* File panel, transfer queue, external edits, built-in editor and image preview. */
+/* .files-panel is also .gx-panel, which already makes it an absolutely placed column. */
+.files-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.files-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-1) var(--gx-space-2);
+  padding: var(--gx-space-1) var(--gx-space-2);
+  background: var(--gx-surface-2);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.files-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.files-tool {
+  inline-size: 2rem;
+  min-inline-size: 2rem;
+  padding: 0;
+}
+
+/* The path takes every spare pixel; the bar wraps before it gets too narrow to read. */
+.files-path-form {
+  flex: 1 1 18rem;
+  min-inline-size: 12rem;
+}
+
+.files-bar .files-path {
+  inline-size: 100%;
+  min-block-size: 2rem;
+  padding: var(--gx-space-1) var(--gx-space-2);
+  font-size: 0.8125rem;
+}
+
+.files-bar .files-filter {
+  flex: 0 1 7rem;
+  min-inline-size: 4.5rem;
+  min-block-size: 1.75rem;
+  padding: 0.125rem var(--gx-space-2);
+  font-size: 0.75rem;
+}
+
+.files-body {
+  display: flex;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.files-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.files-wrap {
+  flex: 1;
+}
+
+.files-tree {
+  flex: none;
+  inline-size: 14rem;
+  max-inline-size: 40%;
+  overflow: auto;
+  background: var(--gx-surface-1);
+  border-inline-end: 1px solid var(--gx-border);
+}
+
+.files-tree-list {
+  margin: 0;
+  padding: var(--gx-space-2) 0;
+  list-style: none;
+}
+
+.files-tree-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  min-block-size: 2rem;
+  padding-inline: calc(var(--level, 0) * 1rem + var(--gx-space-3)) var(--gx-space-3);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  color: var(--gx-text);
+  cursor: default;
+  user-select: none;
+  transition: background-color 0.15s var(--gx-ease);
+}
+
+.files-tree-item:hover {
+  background: var(--gx-hover);
+}
+
+.files-tree-item[aria-selected="true"] {
+  background: var(--gx-selected);
+}
+
+.files-tree-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.files-tree-item[data-error] {
+  color: var(--gx-text-subtle);
+}
+
+.files-tree-caret {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--gx-text-muted);
+}
+
+.files-tree-item[aria-busy="true"] .files-tree-caret {
+  opacity: 0.5;
+}
+
+.files-tree-caret[data-leaf] {
+  visibility: hidden;
+}
+
+.files-tree-caret svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* Column widths come from settings through <colgroup>. */
+.files-table th {
+  user-select: none;
+}
+
+.files-table .sort-button {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.files-col-resize {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 0.5rem;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.files-col-resize::after {
+  content: "";
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-end: 0;
+  inline-size: 1px;
+  background: var(--gx-border);
+  transition: background-color 0.15s var(--gx-ease);
+}
+
+.files-col-resize:hover::after,
+.files-col-resize:focus-visible::after,
+.files-col-resize.dragging::after {
+  inset-block: 0;
+  inline-size: 2px;
+  background: var(--gx-accent);
+}
+
+.files-col-resize:focus-visible {
+  outline: none;
+}
+
+.files-table tbody tr {
+  cursor: default;
+  user-select: none;
+}
+
+.files-table tbody tr:focus-visible {
+  outline-offset: -2px;
+}
+
+.files-table tbody tr[aria-selected="true"] {
+  background: var(--gx-selected);
+}
+
+.files-name {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+/* A Latin name in right-to-left text would lose its start to the ellipsis; each name takes its own
+   direction, so the ellipsis falls at its end. */
+:root[dir="rtl"] :is(.files-name, .files-tree-item) .cell-text {
+  unicode-bidi: plaintext;
+}
+
+.files-icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--gx-icon-file);
+}
+
+.files-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.files-icon[data-icon="folder"] {
+  color: var(--gx-icon-folder);
+}
+
+.files-icon[data-icon="link"] {
+  color: var(--gx-icon-link);
+}
+
+.files-icon[data-icon="code"] {
+  color: var(--gx-icon-code);
+}
+
+.files-icon[data-icon="script"] {
+  color: var(--gx-icon-script);
+}
+
+.files-icon[data-icon="config"],
+.files-icon[data-icon="data"] {
+  color: var(--gx-icon-config);
+}
+
+.files-icon[data-icon="text"],
+.files-icon[data-icon="other"] {
+  color: var(--gx-icon-text);
+}
+
+.files-icon[data-icon="doc"] {
+  color: var(--gx-icon-doc);
+}
+
+.files-icon[data-icon="image"],
+.files-icon[data-icon="audio"],
+.files-icon[data-icon="video"] {
+  color: var(--gx-icon-media);
+}
+
+.files-icon[data-icon="archive"] {
+  color: var(--gx-icon-archive);
+}
+
+.files-icon[data-icon="key"] {
+  color: var(--gx-icon-key);
+}
+
+.files-note {
+  padding: var(--gx-space-4);
+  color: var(--gx-text-muted);
+}
+
+.files-wrap[aria-busy="true"] {
+  opacity: 0.6;
+  transition: opacity 0.2s var(--gx-ease);
+}
+
+.files-drop {
+  position: absolute;
+  inset: var(--gx-space-2);
+  z-index: var(--gx-z-drop);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: oklch(18% 0.03 155 / 0.85);
+  border: 2px dashed var(--gx-accent);
+  border-radius: var(--gx-radius-md);
+  animation: drop-in 0.2s var(--gx-ease);
+}
+
+.files-drop p {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gx-accent-strong);
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.chmod-grid {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.chmod-grid th {
+  padding: var(--gx-space-1) var(--gx-space-3);
+  font-weight: 500;
+  color: var(--gx-text-muted);
+  text-align: start;
+}
+
+.chmod-grid thead th {
+  text-align: center;
+}
+
+.chmod-grid td {
+  padding: var(--gx-space-1) var(--gx-space-3);
+  text-align: center;
+}
+
+/* Transfer queue */
+.transfers,
+.edits {
+  flex: none;
+  border-block-start: 1px solid var(--gx-border);
+  background: var(--gx-surface-1);
+}
+
+.transfers-head {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-2) var(--gx-space-3);
+}
+
+.transfers-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: start;
+  color: var(--gx-text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.transfers-toggle::before {
+  content: "";
+  border-inline: 0.25rem solid transparent;
+  border-block-start: 0.3rem solid currentcolor;
+  transition: transform 0.2s var(--gx-ease);
+}
+
+.transfers-toggle[aria-expanded="false"]::before {
+  transform: rotate(-90deg);
+}
+
+:root[dir="rtl"] .transfers-toggle[aria-expanded="false"]::before {
+  transform: rotate(90deg);
+}
+
+.transfers-list,
+.edits-list {
+  margin: 0;
+  padding: 0 var(--gx-space-3) var(--gx-space-3);
+  list-style: none;
+  max-block-size: 12rem;
+  overflow-y: auto;
+}
+
+.transfer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "dir name actions"
+    "bar bar bar"
+    "info info info";
+  align-items: center;
+  gap: 0.125rem var(--gx-space-2);
+  padding: var(--gx-space-1) 0;
+  font-size: 0.75rem;
+  border-block-end: 1px solid var(--gx-n-800);
+}
+
+.transfer-dir {
+  grid-area: dir;
+  padding: 0 var(--gx-space-1);
+  font-size: 0.6875rem;
+  color: var(--gx-text-muted);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-sm);
+}
+
+.transfer-name {
+  grid-area: name;
+  white-space: nowrap;
+}
+
+.transfer-actions {
+  grid-area: actions;
+  display: flex;
+  gap: var(--gx-space-1);
+}
+
+.transfer-bar {
+  grid-area: bar;
+  display: block;
+  block-size: 0.25rem;
+  overflow: hidden;
+  background: var(--gx-meter-track);
+  border-radius: 999px;
+}
+
+.transfer-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--gx-accent);
+  transform: scaleX(var(--value, 0));
+  transform-origin: left;
+  transition: transform 0.25s var(--gx-ease);
+}
+
+:root[dir="rtl"] .transfer-fill {
+  transform-origin: right;
+}
+
+.transfer-info {
+  grid-area: info;
+  color: var(--gx-text-subtle);
+  overflow-wrap: anywhere;
+}
+
+.transfer[data-state="failed"] .transfer-info {
+  color: var(--gx-danger);
+}
+
+.transfer[data-state="failed"] .transfer-fill {
+  background: var(--gx-danger);
+}
+
+.transfer[data-state="cancelled"] .transfer-fill {
+  background: var(--gx-n-400);
+}
+
+/* External edits */
+.edits-title {
+  margin: 0;
+  padding: var(--gx-space-2) var(--gx-space-3);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gx-text);
+}
+
+.edit {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: 0.125rem 0;
+  font-size: 0.75rem;
+}
+
+.edit-name {
+  flex: 1;
+  min-inline-size: 0;
+  white-space: nowrap;
+}
+
+.edit-state {
+  color: var(--gx-text-subtle);
+}
+
+.edit[data-state="modified"] .edit-state {
+  color: var(--gx-warning);
+}
+
+/* Built-in editor */
+.dialog-body.editor-body {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.editor-local {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  margin: 0;
+  padding: var(--gx-space-2) var(--gx-space-3);
+  font-size: 0.8125rem;
+  color: var(--gx-text-subtle);
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.editor-local .mono {
+  flex: 1;
+  min-inline-size: 0;
+  white-space: nowrap;
+  color: var(--gx-text-muted);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-1);
+  padding: var(--gx-space-1) var(--gx-space-2);
+  background: var(--gx-surface-2);
+  border-block-end: 1px solid var(--gx-border);
+  font-size: 0.8125rem;
+}
+
+.editor-toolbar .button {
+  gap: var(--gx-space-1);
+}
+
+.editor-toolbar .grow {
+  flex: 1;
+}
+
+.editor-toolbar select.editor-language {
+  flex: none;
+  inline-size: auto;
+  max-inline-size: 12rem;
+  padding: var(--gx-space-1) var(--gx-space-2);
+  font-size: 0.8125rem;
+}
+
+.editor-cursor,
+.editor-indent {
+  padding-inline: var(--gx-space-2);
+  color: var(--gx-text-subtle);
+  white-space: nowrap;
+}
+
+.editor-indent {
+  border-inline-start: 1px solid var(--gx-border);
+}
+
+.editor-toolbar .editor-status {
+  gap: var(--gx-space-1);
+  padding-inline: var(--gx-space-2);
+  color: var(--gx-text-subtle);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.editor-toolbar .editor-status[data-tone="error"] {
+  color: var(--gx-danger);
+}
+
+.editor-toolbar .editor-status[data-tone="warning"] {
+  color: var(--gx-warning);
+}
+
+.editor-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-1) var(--gx-space-3);
+  font-size: 0.8125rem;
+  color: var(--gx-text-muted);
+  background: color-mix(in oklab, var(--gx-warning) 10%, var(--gx-surface-1));
+  border-block-end: 1px solid var(--gx-border);
+}
+
+.editor-banner[hidden] {
+  display: none;
+}
+
+.editor-banner .grow {
+  flex: 1;
+}
+
+.editor-host {
+  flex: 1;
+  min-block-size: 0;
+}
+
+.editor-state {
+  font-size: 0.8125rem;
+  color: var(--gx-text-subtle);
+}
+
+.editor-state[data-tone="pending"] {
+  color: var(--gx-warning);
+}
+
+/* Image preview */
+.preview-stage {
+  display: grid;
+  place-items: center;
+  min-block-size: 12rem;
+  max-block-size: calc(100dvh - 14rem);
+  overflow: auto;
+  border-radius: var(--gx-radius-sm);
+  background-color: var(--gx-n-800);
+  background-image:
+    linear-gradient(45deg, var(--gx-n-700) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--gx-n-700) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--gx-n-700) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--gx-n-700) 75%);
+  background-size: 1rem 1rem;
+  background-position:
+    0 0,
+    0 0.5rem,
+    0.5rem -0.5rem,
+    -0.5rem 0;
+}
+
+.preview-image {
+  display: block;
+  max-inline-size: 100%;
+  max-block-size: calc(100dvh - 14rem);
+  object-fit: contain;
+}
+
+.preview-meta {
+  overflow-wrap: anywhere;
+}
+
+/* Download managers */
+.gx-dialog[data-dialog="downloads"] .dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gx-space-2);
+  min-block-size: 0;
+}
+
+.dl-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+.dl-search {
+  flex: 1 1 14rem;
+}
+
+.dl-count {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--gx-text-muted);
+}
+
+.dl-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  block-size: min(26rem, 55dvh);
+  overflow-y: auto;
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-sm);
+}
+
+.dl-item {
+  padding-inline: var(--gx-space-2);
+}
+
+.dl-item[data-kind="preview"] .transfer-dir,
+.dl-item[data-kind="edit"] .transfer-dir {
+  border-style: dashed;
+}
+
+.dl-empty {
+  padding: var(--gx-space-4) var(--gx-space-3);
+  font-size: 0.875rem;
+  color: var(--gx-text-muted);
+}
+
+/* The tree caret points along the line. */
+:root[dir="rtl"] .files-tree-caret svg {
+  transform: scaleX(-1);
+}

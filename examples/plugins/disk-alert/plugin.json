@@ -1,0 +1,51 @@
+{
+  "id": "gladosx.disk-alert",
+  "name": "Disk alert",
+  "version": "1.0.0",
+  "engine": 1,
+  "description": "示例插件：定时在当前 SSH 会话上运行 df，磁盘使用率超过阈值时在状态栏告警",
+  "author": "GladosX",
+  "main": "main.js",
+  "permissions": ["sessions.read", "sessions.exec"],
+  "contributes": {
+    "commands": [{ "id": "check", "title": "立即检查磁盘", "icon": "hard-drive" }],
+    "configuration": [
+      {
+        "key": "threshold",
+        "title": "告警阈值（%）",
+        "description": "任一挂载点的使用率达到这个值就告警",
+        "type": "number",
+        "default": 90
+      },
+      {
+        "key": "interval",
+        "title": "检查间隔（秒）",
+        "description": "最短 15 秒",
+        "type": "number",
+        "default": 60
+      }
+    ]
+  },
+  "locales": {
+    "zh": {
+      "Disk alert": "磁盘告警"
+    },
+    "en": {
+      "示例插件：定时在当前 SSH 会话上运行 df，磁盘使用率超过阈值时在状态栏告警": "Example plugin: runs df on the current SSH session from time to time and warns in the status bar when disk use reaches the threshold",
+      "立即检查磁盘": "Check disks now",
+      "告警阈值（%）": "Alert threshold (%)",
+      "任一挂载点的使用率达到这个值就告警": "Warn when any mount point is this full",
+      "检查间隔（秒）": "Check interval (seconds)",
+      "最短 15 秒": "At least 15 seconds"
+    },
+    "ug": {
+      "Disk alert": "دىسكا ئاگاھلاندۇرۇشى",
+      "示例插件：定时在当前 SSH 会话上运行 df，磁盘使用率超过阈值时在状态栏告警": "مىسال قىستۇرما: نۆۋەتتىكى SSH ئەڭگىمىسىدە df نى ۋاقتى-ۋاقتىدا ئىجرا قىلىپ، دىسكا ئىشلىتىلىشى چەككە يەتكەندە ھالەت بالدىقىدا ئاگاھلاندۇرىدۇ",
+      "立即检查磁盘": "دىسكىنى ھازىرلا تەكشۈرۈش",
+      "告警阈值（%）": "ئاگاھلاندۇرۇش چېكى (%)",
+      "任一挂载点的使用率达到这个值就告警": "ھەرقانداق ئېگەرلەش نۇقتىسىنىڭ ئىشلىتىلىشى بۇ قىممەتكە يەتسە ئاگاھلاندۇرىدۇ",
+      "检查间隔（秒）": "تەكشۈرۈش ئارىلىقى (سېكۇنت)",
+      "最短 15 秒": "ئەڭ ئاز 15 سېكۇنت"
+    }
+  }
+}

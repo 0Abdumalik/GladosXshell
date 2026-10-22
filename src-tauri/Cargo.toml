@@ -1,0 +1,41 @@
+[package]
+name = "gladosxshell"
+description = "GladosXshell desktop SSH client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+# The `_lib` suffix avoids a lib/bin name clash on Windows (rust-lang/cargo#8519).
+name = "gladosxshell_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+# Test builds for outside testers: marked as debug in the UI, with devtools, still optimised.
+debug-build = ["tauri/devtools"]
+
+[build-dependencies]
+tauri-build = { version = "=2.7.0", features = [] }
+
+[dependencies]
+gxs-core = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tauri = { version = "=2.12.0", features = [] }
+tauri-plugin-clipboard-manager = "=2.4.1"
+tauri-plugin-dialog = "=2.8.0"
+tauri-plugin-opener = "=2.7.0"
+tokio-util = { version = "=0.7.19", default-features = false }
+zeroize = "=1.9.0"
+# Reads font names for the terminal font picker; memory-mapped so only the name tables are touched.
+fontdb = { version = "=0.24.0", default-features = false, features = ["std", "fs", "memmap"] }
+# Opens and saves editor files in GBK, UTF-16 and other legacy encodings.
+encoding_rs = "=0.8.35"
+zip = { version = "=2.4.2", default-features = false, features = ["deflate"] }
+# rustls on ring, which russh already builds; certificates come from the OS store.
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls-no-provider"] }
+rustls = { version = "=0.23.42", default-features = false, features = ["ring", "std", "tls12"] }

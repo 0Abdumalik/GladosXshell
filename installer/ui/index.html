@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GladosXshell</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="brand" data-tauri-drag-region>
+        <img class="brand-icon" src="icon.png" alt="" width="72" height="72" data-tauri-drag-region />
+        <div class="brand-text" data-tauri-drag-region>
+          <p class="brand-series" data-tauri-drag-region data-t="series"></p>
+          <h2 class="brand-name" data-tauri-drag-region>GladosXshell</h2>
+          <p class="brand-meta" data-tauri-drag-region>
+            <span id="brand-version"></span>
+            <span class="pill" id="brand-channel" data-t="debugBuild" hidden></span>
+          </p>
+        </div>
+        <p class="brand-foot" data-tauri-drag-region>
+          <span data-t="tagline"></span><br />
+          <span id="brand-author">malik</span>
+        </p>
+      </aside>
+
+      <main class="stage">
+        <header class="titlebar" data-tauri-drag-region>
+          <button class="window-button" id="minimize" type="button" data-t-aria-label="minimize">
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M222,128a6,6,0,0,1-6,6H40a6,6,0,0,1,0-12H216A6,6,0,0,1,222,128Z" /></svg>
+          </button>
+          <button class="window-button close" id="close" type="button" data-t-aria-label="close">
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M204.24,195.76a6,6,0,1,1-8.48,8.48L128,136.49,60.24,204.24a6,6,0,0,1-8.48-8.48L119.51,128,51.76,60.24a6,6,0,0,1,8.48-8.48L128,119.51l67.76-67.75a6,6,0,0,1,8.48,8.48L136.49,128Z" /></svg>
+          </button>
+        </header>
+
+        <section class="screen" id="screen-install" hidden>
+          <p class="eyebrow" id="install-eyebrow"></p>
+          <!-- biome-ignore lint/a11y/useHeadingContent: main.js fills in the text at startup -->
+          <h1 id="install-title"></h1>
+          <p class="lead" id="install-lead"></p>
+          <fieldset class="field scope" id="scope">
+            <legend class="label" data-t="installFor"></legend>
+            <div class="segmented">
+              <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+              <label><input type="radio" name="scope" value="machine" /><span data-t="allUsers"></span></label>
+              <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+              <label><input type="radio" name="scope" value="user" /><span data-t="onlyMe"></span></label>
+            </div>
+            <p class="hint" id="scope-hint"></p>
+          </fieldset>
+          <div class="field dir-field">
+            <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+            <label for="dir" data-t="location"></label>
+            <div class="dir-row">
+              <input id="dir" type="text" spellcheck="false" autocomplete="off" />
+              <button class="button secondary" id="pick" type="button">
+                <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M243.36,111.81A14,14,0,0,0,232,106H214V88a14,14,0,0,0-14-14H130L101.74,52.8a14.06,14.06,0,0,0-8.4-2.8H40A14,14,0,0,0,26,64V208a6,6,0,0,0,6,6H211.1a6,6,0,0,0,5.69-4.1l28.49-85.47A14,14,0,0,0,243.36,111.81ZM40,62H93.34a2,2,0,0,1,1.2.4L124.4,84.8A6,6,0,0,0,128,86h72a2,2,0,0,1,2,2v18H69.77a14,14,0,0,0-13.28,9.57L38,171V64A2,2,0,0,1,40,62Zm193.9,58.63L206.78,202H40.33l27.54-82.63a2,2,0,0,1,1.9-1.37H232a2,2,0,0,1,1.9,2.63Z" /></svg>
+                <span data-t="change"></span>
+              </button>
+            </div>
+            <p class="hint" id="dir-hint"></p>
+          </div>
+          <div class="options inline">
+            <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+            <label class="check"><input type="checkbox" id="desktop" checked /> <span data-t="desktopShortcut"></span></label>
+            <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+            <label class="check"><input type="checkbox" id="start-menu" checked /> <span data-t="addToStartMenu"></span></label>
+          </div>
+          <footer class="actions">
+            <button class="button primary" id="install" type="button"></button>
+          </footer>
+        </section>
+
+        <section class="screen" id="screen-uninstall" hidden>
+          <p class="eyebrow danger-text" data-t="uninstall"></p>
+          <!-- biome-ignore lint/a11y/useHeadingContent: main.js fills in the text at startup -->
+          <h1 id="uninstall-title"></h1>
+          <p class="lead" data-t="uninstallLead"></p>
+          <div class="field">
+            <span class="label" data-t="location"></span>
+            <p class="path" id="uninstall-dir"></p>
+            <p class="hint" id="uninstall-scope"></p>
+          </div>
+          <div class="options">
+            <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+            <label class="check"><input type="checkbox" id="remove-data" /> <span data-t="removeData"></span></label>
+            <p class="hint" id="remove-data-hint" data-t="keepDataHint"></p>
+          </div>
+          <footer class="actions">
+            <button class="button text" id="uninstall-cancel" type="button" data-t="cancel"></button>
+            <button class="button danger" id="uninstall" type="button">
+              <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M216,50H174V40a22,22,0,0,0-22-22H104A22,22,0,0,0,82,40V50H40a6,6,0,0,0,0,12H50V208a14,14,0,0,0,14,14H192a14,14,0,0,0,14-14V62h10a6,6,0,0,0,0-12ZM94,40a10,10,0,0,1,10-10h48a10,10,0,0,1,10,10V50H94ZM194,208a2,2,0,0,1-2,2H64a2,2,0,0,1-2-2V62H194ZM110,104v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Zm48,0v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Z" /></svg>
+              <span data-t="uninstall"></span>
+            </button>
+          </footer>
+        </section>
+
+        <section class="screen" id="screen-progress" hidden>
+          <p class="eyebrow" id="progress-eyebrow"></p>
+          <!-- biome-ignore lint/a11y/useHeadingContent: main.js fills in the text at startup -->
+          <h1 id="progress-title"></h1>
+          <div class="progress" role="progressbar" aria-labelledby="progress-title" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <p class="progress-meta">
+            <span id="progress-label" data-t="preparing"></span>
+            <span class="percent" id="progress-percent">0%</span>
+          </p>
+        </section>
+
+        <section class="screen" id="screen-done" hidden>
+          <svg class="status-icon success" viewBox="0 0 256 256" aria-hidden="true"><path d="M172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76ZM230,128A102,102,0,1,1,128,26,102.12,102.12,0,0,1,230,128Zm-12,0a90,90,0,1,0-90,90A90.1,90.1,0,0,0,218,128Z" /></svg>
+          <!-- biome-ignore lint/a11y/useHeadingContent: main.js fills in the text at startup -->
+          <h1 id="done-title"></h1>
+          <p class="lead" id="done-lead"></p>
+          <ul class="warnings" id="done-warnings" hidden></ul>
+          <div class="options" id="launch-row">
+            <!-- biome-ignore lint/a11y/noLabelWithoutControl: the text comes from data-t at startup -->
+            <label class="check"><input type="checkbox" id="launch" checked /> <span data-t="openNow"></span></label>
+          </div>
+          <footer class="actions">
+            <button class="button primary" id="finish" type="button"></button>
+          </footer>
+        </section>
+
+        <section class="screen" id="screen-error" hidden>
+          <svg class="status-icon danger-text" viewBox="0 0 256 256" aria-hidden="true"><path d="M128,26A102,102,0,1,0,230,128,102.12,102.12,0,0,0,128,26Zm0,192a90,90,0,1,1,90-90A90.1,90.1,0,0,1,128,218Zm-6-82V80a6,6,0,0,1,12,0v56a6,6,0,0,1-12,0Zm16,36a10,10,0,1,1-10-10A10,10,0,0,1,138,172Z" /></svg>
+          <!-- biome-ignore lint/a11y/useHeadingContent: main.js fills in the text at startup -->
+          <h1 id="error-title"></h1>
+          <p class="lead" id="error-message"></p>
+          <p class="hint" id="error-contact"></p>
+          <footer class="actions">
+            <button class="button text" id="error-quit" type="button" data-t="exit"></button>
+            <button class="button primary" id="error-back" type="button">
+              <svg class="flip-rtl" viewBox="0 0 256 256" aria-hidden="true"><path d="M238,56v48a6,6,0,0,1-6,6H184a6,6,0,0,1,0-12h32.55l-30.38-27.8c-.06-.06-.12-.13-.19-.19a82,82,0,1,0-1.7,117.65,6,6,0,0,1,8.24,8.73A93.46,93.46,0,0,1,128,222h-1.28A94,94,0,1,1,194.37,61.4L226,90.35V56a6,6,0,1,1,12,0Z" /></svg>
+              <span data-t="retry"></span>
+            </button>
+          </footer>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

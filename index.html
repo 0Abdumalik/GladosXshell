@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GladosXshell</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="/src/styles/controls.css" />
+    <link rel="stylesheet" href="/src/styles/shell.css" />
+    <link rel="stylesheet" href="/src/styles/tabs.css" />
+    <link rel="stylesheet" href="/src/styles/dialogs.css" />
+    <link rel="stylesheet" href="/src/styles/panels.css" />
+    <link rel="stylesheet" href="/src/styles/status.css" />
+    <link rel="stylesheet" href="/src/styles/files.css" />
+    <link rel="stylesheet" href="/src/styles/connections.css" />
+    <link rel="stylesheet" href="/src/styles/settings.css" />
+    <link rel="stylesheet" href="/src/styles/commands.css" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="toolbar">
+        <span class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>GladosXshell</span>
+        </span>
+        <button id="open-manager" type="button" class="button quiet" aria-keyshortcuts="Control+Shift+N"
+          data-t="manager"></button>
+        <button id="new-server" type="button" class="button quiet" data-t="newConnection"></button>
+        <button id="open-local" type="button" class="button quiet" data-t="localTerminal"></button>
+        <span class="toolbar-spacer"></span>
+        <button id="toggle-command-bar" type="button" class="button quiet" aria-pressed="true" data-t="commandBar"></button>
+        <button id="open-downloads" type="button" class="button quiet" data-t="downloads"></button>
+        <button id="open-applog" type="button" class="button quiet" data-t="appLog"></button>
+        <button id="open-palette" type="button" class="button quiet" aria-keyshortcuts="Control+Shift+P" data-t="palette"></button>
+        <button id="open-settings" type="button" class="button quiet" aria-keyshortcuts="Control+," data-t="settings"></button>
+      </header>
+
+      <div id="shell" class="gx-shell">
+        <section class="gx-region" data-region="left" data-t-aria-label="leftPanel"></section>
+        <!-- biome-ignore lint/a11y/useSemanticElements: a focusable window splitter, not a static <hr> -->
+        <div class="gx-splitter" data-for="left" role="separator" aria-orientation="vertical"
+          data-t-aria-label="resizeLeft" aria-valuenow="300" aria-valuemin="180" aria-valuemax="900" tabindex="0"></div>
+
+        <main class="gx-center">
+          <div id="tabs" class="tabs" role="tablist" data-t-aria-label="sessions"></div>
+          <section id="terminals" class="terminals">
+            <div id="empty" class="empty">
+              <!-- biome-ignore lint/a11y/useHeadingContent: the text comes from data-t at startup -->
+              <h1 data-t="emptyTitle"></h1>
+              <p data-t="emptyText"></p>
+              <div class="empty-actions">
+                <button id="empty-manager" type="button" class="button primary" data-t="openManager"></button>
+                <button id="empty-new" type="button" class="button" data-t="newConnection"></button>
+                <button id="empty-local" type="button" class="button quiet" data-t="localTerminal"></button>
+              </div>
+            </div>
+          </section>
+          <section id="command-bar" class="gx-command-bar" data-t-aria-label="commandInput"></section>
+          <!-- biome-ignore lint/a11y/useSemanticElements: a focusable window splitter, not a static <hr> -->
+          <div class="gx-splitter" data-for="bottom" role="separator" aria-orientation="horizontal"
+            data-t-aria-label="resizeBottom" aria-valuenow="280" aria-valuemin="120" aria-valuemax="900" tabindex="0"></div>
+          <section class="gx-region" data-region="bottom" data-t-aria-label="bottomPanel"></section>
+        </main>
+
+        <!-- biome-ignore lint/a11y/useSemanticElements: a focusable window splitter, not a static <hr> -->
+        <div class="gx-splitter" data-for="right" role="separator" aria-orientation="vertical"
+          data-t-aria-label="resizeRight" aria-valuenow="380" aria-valuemin="180" aria-valuemax="900" tabindex="0"></div>
+        <section class="gx-region" data-region="right" data-t-aria-label="rightPanel"></section>
+      </div>
+
+      <footer class="statusbar statusbar-split">
+        <span id="status" class="statusbar-text" role="status" aria-live="polite"></span>
+        <span id="status-info" class="statusbar-items"></span>
+        <span id="status-items" class="statusbar-items"></span>
+      </footer>
+    </div>
+  </body>
+</html>

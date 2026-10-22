@@ -1,0 +1,725 @@
+/*
+ * Theme tokens. Everything public is prefixed --gx-* so custom.css can retheme the app by
+ * overriding variables on :root; see the settings dialog for the list of stable hooks.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Dark theme - inspired by Arc/Linear/GitHub dark */
+  --gx-n-50: oklch(97% 0.005 250);
+  --gx-n-100: oklch(92% 0.006 250);
+  --gx-n-200: oklch(82% 0.008 250);
+  --gx-n-300: oklch(68% 0.01 250);
+  --gx-n-400: oklch(56% 0.01 250);
+  --gx-n-500: oklch(48% 0.01 250);
+  --gx-n-600: oklch(38% 0.01 250);
+  --gx-n-700: oklch(28% 0.01 250);
+  --gx-n-800: oklch(20% 0.008 250);
+  --gx-n-850: oklch(17% 0.008 250);
+  --gx-n-900: oklch(14% 0.008 250);
+  --gx-n-950: oklch(11% 0.008 250);
+
+  /* Accent colors - vibrant but not neon */
+  --gx-blue-400: oklch(75% 0.14 245);
+  --gx-blue-500: oklch(65% 0.16 245);
+  --gx-blue-600: oklch(55% 0.15 245);
+  --gx-blue-900: oklch(22% 0.05 245);
+  --gx-green-400: oklch(75% 0.13 155);
+  --gx-green-500: oklch(65% 0.14 155);
+  --gx-green-900: oklch(22% 0.04 155);
+  --gx-red-400: oklch(70% 0.14 25);
+  --gx-red-500: oklch(60% 0.15 25);
+  --gx-red-900: oklch(25% 0.05 25);
+  --gx-amber-400: oklch(78% 0.12 80);
+  --gx-amber-500: oklch(68% 0.13 80);
+  --gx-purple-400: oklch(72% 0.14 290);
+  --gx-purple-500: oklch(62% 0.15 290);
+
+  /* Semantic mapping */
+  --gx-surface-0: var(--gx-n-950);
+  --gx-surface-1: var(--gx-n-900);
+  --gx-surface-2: var(--gx-n-850);
+  --gx-surface-3: var(--gx-n-800);
+  --gx-hover: oklch(22% 0.01 250);
+  --gx-selected: oklch(25% 0.06 245);
+  --gx-border: oklch(24% 0.008 250);
+  --gx-border-strong: var(--gx-n-700);
+  --gx-text: var(--gx-n-50);
+  --gx-text-muted: var(--gx-n-300);
+  --gx-text-subtle: var(--gx-n-400);
+  --gx-accent: var(--gx-blue-500);
+  --gx-accent-strong: var(--gx-blue-400);
+  --gx-on-accent: var(--gx-blue-900);
+  --gx-danger: var(--gx-red-400);
+  --gx-danger-surface: var(--gx-red-900);
+  --gx-warning: var(--gx-amber-400);
+  --gx-success: var(--gx-green-400);
+
+  --gx-meter-track: var(--gx-n-800);
+  --gx-meter-ok: var(--gx-green-500);
+  --gx-meter-high: var(--gx-amber-400);
+  --gx-meter-full: var(--gx-red-400);
+  --gx-chart-rx: var(--gx-green-500);
+  --gx-chart-tx: var(--gx-blue-500);
+  --gx-chart-latency: var(--gx-amber-500);
+  --gx-chart-grid: var(--gx-n-800);
+  --gx-icon-file: var(--gx-n-300);
+  --gx-icon-text: var(--gx-n-200);
+  --gx-icon-folder: var(--gx-amber-400);
+  --gx-icon-link: var(--gx-blue-400);
+  --gx-icon-code: var(--gx-blue-400);
+  --gx-icon-script: var(--gx-green-400);
+  --gx-icon-config: var(--gx-purple-400);
+  --gx-icon-doc: oklch(72% 0.12 265);
+  --gx-icon-media: oklch(73% 0.13 340);
+  --gx-icon-archive: oklch(74% 0.12 50);
+  --gx-icon-key: oklch(76% 0.13 95);
+  --gx-code-active-line: oklch(16% 0.01 250);
+  --gx-code-match: oklch(30% 0.08 245 / 0.4);
+  --gx-code-match-active: oklch(42% 0.1 70 / 0.55);
+
+  /* Syntax colours, after VS Code Dark+ */
+  --gx-syn-keyword: oklch(72% 0.12 320);
+  --gx-syn-storage: oklch(66% 0.12 250);
+  --gx-syn-string: oklch(74% 0.09 45);
+  --gx-syn-regexp: oklch(64% 0.13 25);
+  --gx-syn-number: oklch(82% 0.07 135);
+  --gx-syn-comment: oklch(62% 0.1 140);
+  --gx-syn-variable: oklch(85% 0.08 230);
+  --gx-syn-function: oklch(87% 0.09 100);
+  --gx-syn-type: oklch(76% 0.11 175);
+  --gx-syn-property: oklch(82% 0.07 225);
+  --gx-syn-tag: oklch(66% 0.12 250);
+  --gx-syn-attribute: oklch(85% 0.08 230);
+  --gx-syn-operator: var(--gx-n-100);
+  --gx-syn-meta: oklch(80% 0.09 85);
+  --gx-syn-link: var(--gx-accent-strong);
+  --gx-syn-guide: oklch(30% 0.01 250);
+  --gx-syn-match-border: oklch(50% 0.09 245);
+
+  --gx-terminal-bg: #0d1117;
+  --gx-terminal-fg: #e6edf3;
+
+  --gx-font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --gx-font-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+
+  /* 8px 基准间距系统（Material Design 2） */
+  --gx-space-1: 0.25rem; /* 4px */
+  --gx-space-2: 0.5rem; /* 8px - 基准单元 */
+  --gx-space-3: 0.75rem; /* 12px */
+  --gx-space-4: 1rem; /* 16px - 标准间距 */
+  --gx-space-5: 1.5rem; /* 24px */
+  --gx-space-6: 2rem; /* 32px */
+  --gx-space-8: 3rem; /* 48px - 分节间距 */
+
+  /* 统一圆角系统 */
+  --gx-radius-sm: 0.25rem; /* 4px - 小元素 */
+  --gx-radius-md: 0.5rem; /* 8px - 标准 */
+  --gx-radius-lg: 0.75rem; /* 12px - 大卡片 */
+
+  /* 动画曲线 */
+  --gx-ease: cubic-bezier(0.4, 0, 0.2, 1); /* Material standard */
+  --gx-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --gx-ease-decelerate: cubic-bezier(0, 0, 0.2, 1); /* Material decelerate */
+  --gx-ease-accelerate: cubic-bezier(0.4, 0, 1, 1); /* Material accelerate */
+
+  --gx-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --gx-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --gx-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --gx-z-splitter: 10;
+  --gx-z-drop: 20;
+  --gx-z-menu: 40;
+  --gx-z-dialog: 50;
+  --gx-z-toast: 60;
+
+  font-family: var(--gx-font-ui);
+  font-size: 100%;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--gx-text);
+  background: var(--gx-surface-1);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Components set display on many elements; the hidden attribute must still win. */
+[hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: hidden must beat component display rules */
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/*
+ * Uyghur reads right to left: <html dir="rtl"> mirrors text, toolbars, tabs and dialogs. Some
+ * containers stay left to right (the dock, whose panels are named left and right and whose
+ * splitters work in screen coordinates; terminals; code editors) and hand the text direction
+ * back to their contents with var(--gx-dir).
+ */
+:root {
+  --gx-dir: ltr;
+}
+
+:root[dir="rtl"] {
+  --gx-dir: rtl;
+}
+
+/* Paths, hosts and commands keep their own order wherever they sit; inputs follow what is typed. */
+code,
+kbd,
+.mono,
+input,
+textarea {
+  unicode-bidi: plaintext;
+}
+
+.cm-editor {
+  direction: ltr;
+}
+
+.mono {
+  font-family: var(--gx-font-mono);
+  font-variant-ligatures: none;
+}
+
+/* Plaintext makes `start` the left edge for a Latin value; in right-to-left text the value still
+   lines up with its column. Any rule that sets its own alignment wins. */
+:where(:root[dir="rtl"]) .mono:where(:not(input, textarea, pre)) {
+  text-align: right;
+}
+
+/* Hints in code fields are sentences; a monospace font pulls Arabic letters apart into cells. */
+:root[dir="rtl"] .mono::placeholder {
+  font-family: var(--gx-font-ui);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gx-accent-strong);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--gx-selected);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat every component transition */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat every component transition */
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Icon-text spacing fix */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-2) var(--gx-space-3);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-md);
+  background: var(--gx-surface-2);
+  color: var(--gx-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 150ms var(--gx-ease-spring);
+  user-select: none;
+}
+
+.icon-button:hover {
+  background: var(--gx-hover);
+  border-color: var(--gx-border-strong);
+  transform: translateY(-1px);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+  transition-duration: 50ms;
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Icons: span.gx-icon wrapping an SVG; sized by font-size, coloured by `color`. */
+.gx-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.125em;
+  block-size: 1.125em;
+  line-height: 1;
+  vertical-align: -0.1875em;
+}
+
+.gx-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.gx-icon:empty {
+  display: none;
+}
+
+/* "Send" points the way the text runs, so it turns round in right-to-left text. */
+:root[dir="rtl"] .gx-icon[data-icon="paper-plane-right"] svg {
+  transform: scaleX(-1);
+}
+
+/* Button variants */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-2) var(--gx-space-4);
+  border: none;
+  border-radius: var(--gx-radius-md);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 150ms var(--gx-ease-spring);
+  user-select: none;
+}
+
+.button.primary {
+  background: var(--gx-accent);
+  color: var(--gx-on-accent);
+  box-shadow: var(--gx-shadow-sm);
+}
+
+.button.primary:hover {
+  background: var(--gx-accent-strong);
+  box-shadow: var(--gx-shadow-md);
+  transform: translateY(-1px);
+}
+
+.button.secondary {
+  background: var(--gx-surface-3);
+  color: var(--gx-text);
+  border: 1px solid var(--gx-border);
+}
+
+.button.secondary:hover {
+  background: var(--gx-hover);
+  border-color: var(--gx-border-strong);
+}
+
+.button.danger {
+  background: var(--gx-danger-surface);
+  color: var(--gx-danger);
+}
+
+.button.danger:hover {
+  background: var(--gx-danger);
+  color: var(--gx-surface-0);
+}
+
+.button.quiet {
+  background: transparent;
+  color: var(--gx-text-muted);
+}
+
+.button.quiet:hover {
+  background: var(--gx-hover);
+  color: var(--gx-text);
+}
+
+.button:active {
+  transform: scale(0.98);
+  transition-duration: 50ms;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Panel borders and layout */
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--gx-surface-1);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--gx-shadow-sm);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gx-space-3) var(--gx-space-4);
+  background: var(--gx-surface-2);
+  border-bottom: 1px solid var(--gx-border);
+  font-weight: 500;
+}
+
+.panel-body {
+  flex: 1;
+  overflow: auto;
+}
+
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  padding: var(--gx-space-2) var(--gx-space-3);
+  background: var(--gx-surface-2);
+  border-bottom: 1px solid var(--gx-border);
+}
+
+.panel-section {
+  padding: var(--gx-space-4);
+  border-bottom: 1px solid var(--gx-border);
+}
+
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+.panel-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  margin-bottom: var(--gx-space-3);
+  font-weight: 500;
+  color: var(--gx-text);
+}
+
+/* Splitter improvements */
+.splitter {
+  position: relative;
+  z-index: var(--gx-z-splitter);
+  background: var(--gx-border);
+  transition: all 150ms var(--gx-ease-spring);
+}
+
+.splitter:hover {
+  background: var(--gx-accent);
+  box-shadow: 0 0 8px oklch(from var(--gx-accent) l c h / 0.4);
+}
+
+.splitter.horizontal {
+  height: 1px;
+  cursor: row-resize;
+}
+
+.splitter.vertical {
+  width: 1px;
+  cursor: col-resize;
+}
+
+/* Form controls */
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+select {
+  padding: var(--gx-space-2) var(--gx-space-3);
+  background: var(--gx-surface-2);
+  border: 1px solid var(--gx-border);
+  border-radius: var(--gx-radius-md);
+  color: var(--gx-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition: all 150ms var(--gx-ease-spring);
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gx-accent);
+  background: var(--gx-surface-3);
+  box-shadow: 0 0 0 3px oklch(from var(--gx-accent) l c h / 0.15);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--gx-accent);
+  cursor: pointer;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+thead {
+  background: var(--gx-surface-2);
+  border-bottom: 1px solid var(--gx-border-strong);
+}
+
+th {
+  padding: var(--gx-space-2) var(--gx-space-3);
+  text-align: start;
+  font-weight: 500;
+  color: var(--gx-text);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+td {
+  padding: var(--gx-space-2) var(--gx-space-3);
+  border-bottom: 1px solid var(--gx-border);
+}
+
+tr {
+  transition: background 100ms var(--gx-ease-spring);
+}
+
+tr:hover {
+  background: var(--gx-hover);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-4);
+  padding: var(--gx-space-2) var(--gx-space-4);
+  background: var(--gx-surface-2);
+  border-top: 1px solid var(--gx-border);
+  font-size: 0.75rem;
+  color: var(--gx-text-muted);
+}
+
+.status-bar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gx-space-2);
+}
+
+.status-bar-separator {
+  width: 1px;
+  height: 1rem;
+  background: var(--gx-border);
+}
+
+/* Tooltips */
+[title] {
+  cursor: help;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gx-border-strong);
+  border-radius: var(--gx-radius-sm);
+  transition: background-color 0.2s var(--gx-ease);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gx-n-600);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--gx-n-500);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 细滚动条变体（用于小区域） */
+.status-panel::-webkit-scrollbar,
+.gx-widget::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar,
+.fav-list::-webkit-scrollbar,
+.cmd-history-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.status-panel::-webkit-scrollbar-thumb,
+.gx-widget::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb,
+.fav-list::-webkit-scrollbar-thumb,
+.cmd-history-list::-webkit-scrollbar-thumb {
+  background: var(--gx-border);
+  border-radius: 3px;
+}
+
+.status-panel::-webkit-scrollbar-thumb:hover,
+.gx-widget::-webkit-scrollbar-thumb:hover,
+.table-wrap::-webkit-scrollbar-thumb:hover,
+.fav-list::-webkit-scrollbar-thumb:hover,
+.cmd-history-list::-webkit-scrollbar-thumb:hover {
+  background: var(--gx-border-strong);
+}
+
+/* Firefox 滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gx-border-strong) transparent;
+}
+
+.status-panel,
+.gx-widget,
+.table-wrap,
+.fav-list,
+.cmd-history-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gx-border) transparent;
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gx-surface-0);
+  opacity: 0.5;
+  z-index: 1;
+}
+
+/* Empty states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gx-space-6);
+  text-align: center;
+  color: var(--gx-text-muted);
+}
+
+.empty-state .gx-icon {
+  font-size: 3rem;
+  margin-bottom: var(--gx-space-4);
+  opacity: 0.5;
+}
+
+/* Light theme overrides - inspired by GitHub/Linear/Arc light */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Light neutrals - warm tinted for comfort */
+  --gx-n-50: oklch(12% 0.005 250);
+  --gx-n-100: oklch(18% 0.005 250);
+  --gx-n-200: oklch(32% 0.006 250);
+  --gx-n-300: oklch(48% 0.008 250);
+  --gx-n-400: oklch(58% 0.008 250);
+  --gx-n-500: oklch(68% 0.008 250);
+  --gx-n-600: oklch(80% 0.006 250);
+  --gx-n-700: oklch(88% 0.005 250);
+  --gx-n-800: oklch(93% 0.004 250);
+  --gx-n-850: oklch(96% 0.003 250);
+  --gx-n-900: oklch(98% 0.002 250);
+  --gx-n-950: oklch(99.5% 0.001 250);
+
+  /* Accent colors - more vibrant in light mode */
+  --gx-blue-400: oklch(55% 0.18 245);
+  --gx-blue-500: oklch(48% 0.2 245);
+  --gx-blue-600: oklch(42% 0.18 245);
+  --gx-blue-900: oklch(92% 0.05 245);
+  --gx-green-400: oklch(52% 0.16 155);
+  --gx-green-500: oklch(45% 0.18 155);
+  --gx-green-900: oklch(92% 0.04 155);
+  --gx-red-400: oklch(58% 0.18 25);
+  --gx-red-500: oklch(50% 0.2 25);
+  --gx-red-900: oklch(94% 0.04 25);
+  --gx-amber-400: oklch(62% 0.14 80);
+  --gx-amber-500: oklch(55% 0.16 80);
+  --gx-purple-400: oklch(58% 0.16 290);
+  --gx-purple-500: oklch(50% 0.18 290);
+
+  /* Semantic remapping for light mode */
+  --gx-hover: oklch(94% 0.004 250);
+  --gx-selected: oklch(90% 0.08 245);
+  --gx-border: oklch(86% 0.005 250);
+  --gx-code-active-line: oklch(97% 0.003 250);
+  --gx-code-match: oklch(88% 0.1 245 / 0.3);
+  --gx-code-match-active: oklch(85% 0.12 80 / 0.6);
+
+  /* Syntax colours, after VS Code Light+ */
+  --gx-syn-keyword: oklch(48% 0.2 320);
+  --gx-syn-storage: oklch(46% 0.2 262);
+  --gx-syn-string: oklch(45% 0.16 28);
+  --gx-syn-regexp: oklch(40% 0.13 5);
+  --gx-syn-number: oklch(52% 0.12 160);
+  --gx-syn-comment: oklch(52% 0.14 142);
+  --gx-syn-variable: oklch(32% 0.14 265);
+  --gx-syn-function: oklch(46% 0.09 80);
+  --gx-syn-type: oklch(52% 0.09 220);
+  --gx-syn-property: oklch(38% 0.12 255);
+  --gx-syn-tag: oklch(38% 0.14 28);
+  --gx-syn-attribute: oklch(54% 0.2 28);
+  --gx-syn-operator: var(--gx-n-100);
+  --gx-syn-meta: oklch(46% 0.09 80);
+  --gx-syn-guide: oklch(88% 0.005 250);
+  --gx-syn-match-border: oklch(70% 0.1 245);
+
+  --gx-terminal-bg: #ffffff;
+  --gx-terminal-fg: #24292f;
+}

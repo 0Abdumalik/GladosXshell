@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-t="title"></title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="/src/styles/controls.css" />
+    <link rel="stylesheet" href="/src/styles/tabs.css" />
+    <link rel="stylesheet" href="/src/styles/guide.css" />
+    <script type="module" src="/src/plugin-guide.ts"></script>
+  </head>
+  <body>
+    <div class="guide-window">
+      <div class="guide-body">
+        <nav id="guide-nav" class="guide-nav" data-t-aria-label="contents"></nav>
+        <main id="guide-content" class="guide-content" tabindex="-1">
+          <p class="guide-loading" data-t="loading"></p>
+        </main>
+      </div>
+      <footer id="status" class="statusbar" role="status" aria-live="polite" data-t="ready"></footer>
+    </div>
+  </body>
+</html>

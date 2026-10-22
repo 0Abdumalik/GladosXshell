@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hello</title>
+    <link rel="stylesheet" href="panel.css" />
+    <script src="/__sdk/gx.js"></script>
+    <script src="panel.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h1><span id="mark" class="icon" aria-hidden="true"></span>Hello</h1>
+        <p id="greeting">…</p>
+        <button id="greet" type="button" data-t="greet">打个招呼</button>
+      </section>
+      <section>
+        <h2 data-t="sessions">会话</h2>
+        <ul id="sessions"></ul>
+        <p id="empty" data-t="empty" hidden>还没有打开的会话</p>
+      </section>
+    </main>
+  </body>
+</html>

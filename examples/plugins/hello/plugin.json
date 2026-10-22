@@ -1,0 +1,87 @@
+{
+  "id": "gladosx.hello",
+  "name": "Hello",
+  "version": "1.0.0",
+  "engine": 1,
+  "description": "示例插件：命令、右键菜单、快捷键、状态栏、面板、图标和设置项",
+  "author": "GladosX",
+  "main": "main.js",
+  "permissions": ["sessions.read", "clipboard"],
+  "contributes": {
+    "commands": [
+      { "id": "greet", "title": "打个招呼", "icon": "smile" },
+      { "id": "quote-selection", "title": "复制选中内容为引用", "icon": "quote" }
+    ],
+    "menus": {
+      "terminal/context": [
+        {
+          "label": "复制为引用（Hello）",
+          "command": "quote-selection",
+          "icon": "quote",
+          "when": "selection"
+        }
+      ],
+      "text/context": [
+        {
+          "label": "复制为引用（Hello）",
+          "command": "quote-selection",
+          "icon": "quote",
+          "when": "selection"
+        }
+      ],
+      "statusbar": [{ "label": "打个招呼（Hello）", "command": "greet", "icon": "smile" }]
+    },
+    "keybindings": [{ "key": "Ctrl+Alt+H", "command": "greet" }],
+    "panels": [
+      { "id": "hello", "title": "Hello", "page": "panel.html", "region": "right", "icon": "smile" }
+    ],
+    "icons": {
+      "smile": {
+        "viewBox": "0 0 24 24",
+        "stroke": true,
+        "path": [
+          "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z",
+          "M8 14c1 1.5 2.4 2.2 4 2.2s3-.7 4-2.2",
+          "M9 9.5v1M15 9.5v1"
+        ]
+      }
+    },
+    "configuration": [
+      {
+        "key": "greeting",
+        "title": "问候语",
+        "description": "执行“打个招呼”时显示的文字，留空用当前语言的问候",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "show-status",
+        "title": "在状态栏显示计数",
+        "type": "boolean",
+        "default": true
+      }
+    ]
+  },
+  "locales": {
+    "en": {
+      "示例插件：命令、右键菜单、快捷键、状态栏、面板、图标和设置项": "Example plugin: commands, context menus, shortcuts, status bar, panel, icons and settings",
+      "打个招呼": "Say hello",
+      "复制选中内容为引用": "Copy the selection as a quote",
+      "复制为引用（Hello）": "Copy as quote (Hello)",
+      "打个招呼（Hello）": "Say hello (Hello)",
+      "问候语": "Greeting",
+      "执行“打个招呼”时显示的文字，留空用当前语言的问候": "Text shown by “Say hello”; leave it empty for a greeting in the app’s language",
+      "在状态栏显示计数": "Show the count in the status bar"
+    },
+    "ug": {
+      "示例插件：命令、右键菜单、快捷键、状态栏、面板、图标和设置项": "مىسال قىستۇرما: بۇيرۇق، ئوڭ كۇنۇپكا تىزىملىكى، تېزلەتمە كۇنۇپكا، ھالەت بالدىقى، تاختا، سىنبەلگە ۋە تەڭشەك",
+      "打个招呼": "سالام بېرىش",
+      "复制选中内容为引用": "تاللانغان مەزمۇننى نەقىل قىلىپ كۆچۈرۈش",
+      "复制为引用（Hello）": "نەقىل قىلىپ كۆچۈرۈش (Hello)",
+      "打个招呼（Hello）": "سالام بېرىش (Hello)",
+      "问候语": "سالام سۆزى",
+      "执行“打个招呼”时显示的文字，留空用当前语言的问候": "«سالام بېرىش» ئىجرا قىلىنغاندا كۆرسىتىلىدىغان سۆز، بوش قالدۇرۇلسا نۆۋەتتىكى تىلدىكى سالام ئىشلىتىلىدۇ",
+      "在状态栏显示计数": "ھالەت بالدىقىدا ساننى كۆرسىتىش"
+    }
+  }
+}
