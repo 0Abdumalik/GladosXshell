@@ -1,0 +1,40 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build release installer
+        run: npm run build:release
+
+      - name: Upload setup to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/release/setup/GladosXshell-Setup-*.exe
