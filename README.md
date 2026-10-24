@@ -28,7 +28,7 @@ English · [简体中文](README.zh-CN.md) · [ئۇيغۇرچە](README.ug.md)
 - **Live monitoring.** CPU, memory, disks, network, latency and processes, plus a separate window with charts and a process manager.
 - **Secrets stay on your machine.** Connections, keys and passwords are handled in the Rust core. Saved passwords are encrypted with Windows DPAPI, or with a master password if you set one.
 - **Extensible.** Every built-in feature is a plugin and can be turned off. Third-party plugins run sandboxed and use only the permissions you grant.
-- **Three languages, plus language packs.** English (`en`), Chinese (`zh-cn`) and Uyghur (`ug`) out of the box (Uyghur gets a full right-to-left layout), and you can import more languages as Cheat-Engine-style packs. Anything a pack does not cover falls back to English.
+- **Three languages, plus language packs.** English (`en`), Chinese (`zh-cn`) and Uyghur (`ug`) out of the box (Uyghur gets a full right-to-left layout); import more from the [i18n repository](https://github.com/Glados-X/I18n-GladosXshell).
 
 ## Quick start
 
@@ -103,21 +103,17 @@ Plugins are written in JavaScript and run in a sandboxed frame. They reach the a
 | Examples | [`examples/plugins`](examples/plugins): `hello` (commands, menus, a panel) and `disk-alert` (runs `df` and warns in the status bar) |
 | Translation | `locales` in `plugin.json`; read the interface language from `gx.lang` |
 
-## Languages and language packs
+## Languages
 
-Language packs work like Cheat Engine's `.lng` files: a pack maps **English source text** to another language, and anything the pack does not cover falls back to English. The built-in three (`en`, `zh-cn`, `ug`) ship inside the binary; imported packs are stored under `<data>/Language/<code>.json` and can override or extend them.
+GladosXshell ships with three built-in languages — English (`en`), Chinese (`zh-cn`) and
+Uyghur (`ug`) — and imports more from language packs, which work like Cheat Engine's `.lng`
+files: a pack maps **English source text** to another language and falls back to English for
+anything it does not cover. Packs are installed from **Settings → Language → Import language
+pack…** and stored under `<data>/Language/<code>.json`.
 
-```json
-{
-  "meta": { "code": "fr", "name": "French", "nativeName": "Français", "rtl": false },
-  "translations": { "Ready": "Prêt", "Connect": "Se connecter", ... }
-}
-```
-
-- `meta.code` is a [BCP 47](https://en.wikipedia.org/wiki/IETF_language_tag) tag written in **lower case** (`fr`, `ja`, `pt-br`, …); near-misses like `zh`, `zh_CN` or `zh-CN` are folded to the built-in `zh-cn`.
-- `meta.name` is the language name in English and `meta.nativeName` its name in itself, shown in the picker.
-- `meta.rtl` turns on the right-to-left layout (used by the built-in Uyghur pack).
-- `translations` keys are the English source texts, exactly as they appear in the app; the built-in packs in [`locales/`](locales/) are the ready-made reference. Regenerate them after adding messages with `node scripts/extract-i18n.mjs`.
+The pack format, ready-made community packs and a validator live in the
+[GladosXshell i18n repository](https://github.com/Glados-X/I18n-GladosXshell) — check there
+for how to translate or contribute a pack.
 
 ## Build from source
 
