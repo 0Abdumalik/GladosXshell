@@ -652,6 +652,15 @@ pub async fn edit_close(state: State<'_, AppState>, edit_id: u32) -> Result<()> 
     Ok(())
 }
 
+/// Magic-byte check so a file that only pretends to be an image is never rendered.
+fn sniff_image(bytes: &[u8]) -> bool {
+    bytes.starts_with(b"\x89PNG\r\n\x1a\n")
+        || bytes.starts_with(b"GIF8")
+        || (bytes.len() >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
+        || (bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP")
+        || (bytes.len() >= 2 && bytes[0] == 0x42 && bytes[1] == 0x4D)
+}
+
 /// Downloads into the work directory and returns the raw bytes (arrives as an ArrayBuffer).
 #[tauri::command]
 pub async fn preview_image(state: State<'_, AppState>, session_id: u32, remote: String) -> Result<Response> {
@@ -671,8 +680,26 @@ pub async fn preview_image(state: State<'_, AppState>, session_id: u32, remote: 
             "رەسىم 10 MB دىن چوڭ، چۈشۈرۈپ ئاندىن كۆرۈڭ"
         )));
     }
+    // A whitelist of common image extensions, then a content sniff on what was fetched.
+    let ext = remote.rsplit('.').next().map(str::to_ascii_lowercase).unwrap_or_default();
+    const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];
+    if !IMAGE_EXTS.contains(&ext.as_str()) {
+        return Err(Error::Invalid(tr!(
+            "只能预览常见图片格式（png/jpg/gif/webp/bmp）",
+            "Only common image formats can be previewed (png/jpg/gif/webp/bmp)",
+            "پەقەت ئادەتتىكى رەسىم فورماتلىرىنىلا (png/jpg/gif/webp/bmp) ئالدىن كۆرگىلى بولىدۇ"
+        )));
+    }
     let local = fetch_to_mirror(&state, &sftp, &label, &remote).await?;
-    Ok(Response::new(tokio::fs::read(&local).await?))
+    let bytes = tokio::fs::read(&local).await?;
+    if !sniff_image(&bytes) {
+        return Err(Error::Invalid(tr!(
+            "这个文件不是图片内容",
+            "This file is not image content",
+            "بۇ ھۆججەت رەسىم مەزمۇنى ئەمەس"
+        )));
+    }
+    Ok(Response::new(bytes))
 }
 
 /// Where previews and edits of `remote` are mirrored locally.

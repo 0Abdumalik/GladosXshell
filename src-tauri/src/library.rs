@@ -382,7 +382,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
     fn stems_are_safe_file_names() {
+        // Backslash paths are Windows semantics; other platforms skip this.
         assert_eq!(safe_stem(Path::new(r"C:\a\海边 photo.png"), "image"), "海边 photo");
         assert_eq!(safe_stem(Path::new(r"C:\a\...png"), "image"), "image");
         assert_eq!(safe_stem(Path::new(r"C:\a\x?y*.png"), "image"), "xy");

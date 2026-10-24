@@ -1,55 +1,89 @@
 /**
- * Interface language. The backend picks it at startup and hands it to every window before any
- * script runs (`window.__GX_LANG__`, or `?lang=` for windows the frontend opens), so it is fixed
- * for the run: module-level constants may call `t`. Changing it in settings applies on restart.
+ * Interface language and language packs. Two kinds of code exist side by side:
  *
- * Every message is written in all three languages where it is used:
+ * - `Lang` (zh / en / ug): the keys of the inline three-language dictionaries used by
+ *   `messages()`. Kept short for the 90+ call sites.
+ * - lower-case BCP 47 codes (zh-cn / en / ug / …): what settings, language-pack files, `?lang=` and
+ *   `window.__GX_LANG__` use. Imported packs add more codes.
  *
- *   const t = messages({ saved: { zh: '已保存 {name}', en: 'Saved {name}', ug: '{name} ساقلاندى' } })
- *   t('saved', { name })
+ * The backend picks the language at startup and hands it to every window before any script runs:
+ * `window.__GX_LANG__` (a BCP 47 code), `window.__GX_PACKS__` (English text -> translation) and
+ * `window.__GX_RTL__`. English text is the key, Cheat Engine .lng style: a message looks its
+ * English text up in the pack and falls back to English (or the inline dictionary) when the key
+ * is missing, so an imported pack only translates what it wants to.
  */
 
+/** The inline dictionary keys; keep these short and stable. */
 export const LANGS = ['zh', 'en', 'ug'] as const
 export type Lang = (typeof LANGS)[number]
-
-/** Each language in its own script, for the picker. */
-export const LANG_NAMES: Record<Lang, string> = { zh: '中文', en: 'English', ug: 'ئۇيغۇرچە' }
-const BCP47: Record<Lang, string> = { zh: 'zh-CN', en: 'en', ug: 'ug' }
 
 declare global {
   interface Window {
     __GX_LANG__?: string
+    __GX_PACKS__?: Record<string, string>
+    __GX_RTL__?: boolean
   }
 }
 
-const isLang = (value: unknown): value is Lang => LANGS.includes(value as Lang)
-
-function initial(): Lang {
-  if (typeof window === 'undefined') return 'zh'
-  const injected = window.__GX_LANG__
-  if (isLang(injected)) return injected
-  const query = new URLSearchParams(window.location.search).get('lang')
-  return isLang(query) ? query : 'zh'
+/** Fold any code (inline or BCP 47) to an inline dictionary key; external packs count as en. */
+function toLang(code: string): Lang {
+  const base = code.toLowerCase().split(/[_-]/)[0] ?? ''
+  if (base === 'zh') return 'zh'
+  if (base === 'ug') return 'ug'
+  return 'en'
 }
 
-let current: Lang = initial()
+/** Fold any code to the closest BCP 47 built-in; other codes are left as-is (external packs). */
+function toCode(code: string): string {
+  const lower = code.toLowerCase()
+  const base = lower.split(/[_-]/)[0] ?? ''
+  if (base === 'zh') return 'zh-cn'
+  if (base === 'en') return 'en'
+  if (base === 'ug') return 'ug'
+  return lower
+}
+
+function initialCode(): string {
+  if (typeof window === 'undefined') return 'zh-cn'
+  const injected = window.__GX_LANG__
+  if (typeof injected === 'string' && injected) return injected
+  const query = new URLSearchParams(window.location.search).get('lang')
+  return query ? toCode(query) : 'en'
+}
+
+let currentCode: string = initialCode()
+let current: Lang = toLang(currentCode)
+
+/** Pack of the current language: English text -> translation. Empty outside the app (tests). */
+const packs: Record<string, string> =
+  typeof window !== 'undefined' && window.__GX_PACKS__ ? window.__GX_PACKS__ : {}
 
 function applyToDocument(): void {
   if (typeof document === 'undefined') return
   const root = document.documentElement
-  root.lang = BCP47[current]
-  root.dir = current === 'ug' ? 'rtl' : 'ltr'
+  root.lang = locale()
+  root.dir = isRtl() ? 'rtl' : 'ltr'
 }
+
+/** The inline dictionary key of the current language (zh / en / ug). */
+export const lang = (): Lang => current
+/** The lower-case BCP 47 code of the current pack (zh-cn / en / ug / imported). */
+export const code = (): string => currentCode
+/** The BCP 47 tag for `Intl` and `lang` attributes. */
+export const locale = (): string => currentCode
+export const isRtl = (): boolean =>
+  typeof window !== 'undefined' && window.__GX_RTL__ !== undefined
+    ? !!window.__GX_RTL__
+    : current === 'ug'
+
+// Runs once at startup. Must come after locale()/isRtl() are defined, or the const
+// arrow functions are still in the temporal dead zone when it fires (blank UI).
 applyToDocument()
 
-export const lang = (): Lang => current
-/** BCP 47 tag of the current language, for `Intl` and `lang` attributes. */
-export const locale = (): string => BCP47[current]
-export const isRtl = (): boolean => current === 'ug'
-
 /** For tests; the app sets the language only at startup. */
-export function setLang(next: Lang): void {
-  current = next
+export function setLang(next: string): void {
+  currentCode = toCode(next)
+  current = toLang(next)
   applyToDocument()
 }
 
@@ -60,18 +94,22 @@ export type Msg = Record<Lang, Text>
 
 const PLACEHOLDER = /\{(\w+)\}/g
 
-function render(text: Text, params?: Params): string {
-  const s = typeof text === 'function' ? text(params ?? {}) : text
-  if (!params) return s
-  return s.replace(PLACEHOLDER, (m, k: string) => (k in params ? String(params[k]) : m))
+function render(text: string, params?: Params): string {
+  if (!params) return text
+  return text.replace(PLACEHOLDER, (m, k: string) => (k in params ? String(params[k]) : m))
+}
+
+function asText(text: Text, params: Params | undefined): string {
+  return typeof text === 'function' ? text(params ?? {}) : text
 }
 
 /**
- * One text in all three languages, resolved on the spot. For data tables (the plugin guide's API
- * reference and the like) where a dictionary key per row would only add indirection.
+ * One text in all three languages, resolved on the spot. Also resolves through the pack when it
+ * carries a translation for the English text; otherwise the inline text stands.
  */
 export function inLang(text: Record<Lang, string>): string {
-  return text[current]
+  const fromPack = packs[text.en]
+  return fromPack ?? text[current]
 }
 
 /** English count noun: `pl('file')` reads `{n}` and gives `1 file`, `3 files`. */
@@ -90,27 +128,6 @@ export interface Translator<K extends string> {
   parts(key: K, parts: Record<string, Part>): Part[]
 }
 
-/** A typed dictionary; every message needs all three languages. */
-export function messages<K extends string>(defs: Record<K, Msg>): Translator<K> {
-  const t = ((key: K, params?: Params) => render(defs[key][current], params)) as Translator<K>
-  t.parts = (key, parts) => {
-    const text = defs[key][current]
-    const s = typeof text === 'function' ? text({}) : text
-    const out: Part[] = []
-    let last = 0
-    for (const m of s.matchAll(PLACEHOLDER)) {
-      const name = m[1] ?? ''
-      if (!Object.hasOwn(parts, name)) continue
-      if (m.index > last) out.push(s.slice(last, m.index))
-      out.push(parts[name])
-      last = m.index + m[0].length
-    }
-    if (last < s.length) out.push(s.slice(last))
-    return out
-  }
-  return t
-}
-
 const LRI = String.fromCodePoint(0x2066)
 const PDI = String.fromCodePoint(0x2069)
 
@@ -119,7 +136,38 @@ const PDI = String.fromCodePoint(0x2069)
  * text. A no-op in the other languages.
  */
 export function ltr(text: string): string {
-  return current === 'ug' && text ? `${LRI}${text}${PDI}` : text
+  return isRtl() && text ? `${LRI}${text}${PDI}` : text
+}
+
+/** A typed dictionary; every message needs all three built-in languages. */
+export function messages<K extends string>(defs: Record<K, Msg>): Translator<K> {
+  /** The pack key of a message: its English text, or the dictionary key when en is a function. */
+  const packKey = (key: K): string => {
+    const en = defs[key].en
+    return typeof en === 'string' ? en : key
+  }
+  const t = ((key: K, params?: Params) => {
+    const fromPack = packs[packKey(key)]
+    if (typeof fromPack === 'string') return render(fromPack, params)
+    // English fallback: the inline dictionary of the current built-in language.
+    return render(asText(defs[key][current], params), params)
+  }) as Translator<K>
+  t.parts = (key, parts) => {
+    const fromPack = packs[packKey(key)]
+    const text = fromPack !== undefined ? fromPack : asText(defs[key][current], {})
+    const out: Part[] = []
+    let last = 0
+    for (const m of text.matchAll(PLACEHOLDER)) {
+      const name = m[1] ?? ''
+      if (!Object.hasOwn(parts, name)) continue
+      if (m.index > last) out.push(text.slice(last, m.index))
+      out.push(parts[name])
+      last = m.index + m[0].length
+    }
+    if (last < text.length) out.push(text.slice(last))
+    return out
+  }
+  return t
 }
 
 /**

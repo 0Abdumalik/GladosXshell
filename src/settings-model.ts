@@ -1,4 +1,4 @@
-import { type Lang, messages } from './i18n'
+import { messages } from './i18n'
 import { common } from './i18n-common'
 
 const t = messages({
@@ -129,12 +129,6 @@ const t = messages({
 /** A built-in panel or `plugin.id/panel` for one a plugin contributes. */
 export type PanelId = string
 export type BuiltinPanel = 'status' | 'files' | 'commands' | 'connections'
-export const BUILTIN_PANELS: readonly BuiltinPanel[] = [
-  'status',
-  'files',
-  'commands',
-  'connections',
-]
 export type Region = 'left' | 'right' | 'bottom' | 'hidden'
 export type DockRegion = Exclude<Region, 'hidden'>
 export type WidgetId =
@@ -250,8 +244,8 @@ export interface Settings {
   ui: {
     scale: number
     theme: 'dark' | 'light' | 'auto'
-    /** Applies on restart; `auto` follows the Windows display language. */
-    language: 'auto' | Lang
+    /** A BCP 47 code, or `'auto'` to follow the system display language. Applies on restart. */
+    language: string
   }
   layout: Layout
   status: {

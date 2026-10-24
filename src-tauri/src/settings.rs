@@ -309,27 +309,48 @@ pub enum Theme {
     Auto,
 }
 
-/// Read at startup; a change takes effect after a restart.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Language {
-    /// The system display language when it is one of the others, English otherwise.
-    #[default]
-    Auto,
-    Zh,
-    En,
-    Ug,
+/// The interface language, as a BCP 47 code, or "auto" to follow the system. Read at startup;
+/// a change takes effect after a restart. Imported language packs add more codes; English text
+/// is always the fallback when a pack misses a key.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Language(String);
+
+impl Default for Language {
+    fn default() -> Self {
+        Self(Self::AUTO.into())
+    }
 }
 
 impl Language {
-    pub fn resolve(self) -> gxs_core::i18n::Lang {
-        use gxs_core::i18n::Lang;
-        match self {
-            Self::Auto => gxs_core::i18n::system(),
-            Self::Zh => Lang::Zh,
-            Self::En => Lang::En,
-            Self::Ug => Lang::Ug,
+    pub const AUTO: &str = "auto";
+
+    /// Build from a BCP 47 code (or "auto"); near-miss tags are folded to the closest built-in.
+    pub fn new(code: impl Into<String>) -> Self {
+        Self(gxs_core::i18n::normalize_code(&code.into()))
+    }
+
+    /// The language pack code actually in use: the choice, or the system language for "auto".
+    pub fn resolve_code(&self) -> String {
+        if self.0 == Self::AUTO {
+            gxs_core::i18n::system().code().to_string()
+        } else {
+            gxs_core::i18n::normalize_code(&self.0)
         }
+    }
+
+    /// The built-in language behind the resolved code; kept for tests and callers that
+    /// need a `Lang` rather than a pack code.
+    #[allow(dead_code)]
+    pub fn resolve(&self) -> gxs_core::i18n::Lang {
+        use gxs_core::i18n::Lang;
+        gxs_core::i18n::Lang::from_code(&self.resolve_code()).unwrap_or(Lang::En)
+    }
+
+    /// The stored code ("auto" or a BCP 47 tag).
+    #[allow(dead_code)]
+    pub fn code(&self) -> &str {
+        &self.0
     }
 }
 
@@ -653,6 +674,8 @@ pub(crate) struct SettingsStore {
     default_work_dir: PathBuf,
     data: RwLock<Settings>,
     load_error: RwLock<Option<LoadError>>,
+    /// True when settings.json did not exist yet (first run): the system language is pinned then.
+    created: bool,
 }
 
 /// Why settings.json was not used. Worded on request: the store is opened before the language is
@@ -678,7 +701,9 @@ impl LoadError {
 impl SettingsStore {
     pub async fn open(config_dir: &Path, default_work_dir: PathBuf) -> Self {
         let path = config_dir.join("settings.json");
-        let (data, load_error) = match fsutil::read_optional(&path).await {
+        let read = fsutil::read_optional(&path).await;
+        let created = matches!(&read, Ok(None));
+        let (data, load_error) = match read {
             Ok(None) => (Settings::default(), None),
             Ok(Some(bytes)) => match serde_json::from_slice::<Settings>(&bytes)
                 .map_err(|e| e.to_string())
@@ -695,11 +720,26 @@ impl SettingsStore {
             default_work_dir,
             data: RwLock::new(data),
             load_error: RwLock::new(load_error),
+            created,
         }
     }
 
     pub async fn load_error(&self) -> Option<String> {
         self.load_error.read().await.as_ref().map(LoadError::text)
+    }
+
+    /// True when settings.json did not exist when the store was opened (first run).
+    pub async fn created(&self) -> bool {
+        self.created
+    }
+
+    /// Replaces the saved language, used on first run to pin the detected system language.
+    pub async fn set_language(&self, code: String) -> Result<()> {
+        let mut data = self.data.write().await;
+        data.ui.language = Language::new(code);
+        let body = serde_json::to_vec_pretty(&*data).map_err(|e| Error::Invalid(e.to_string()))?;
+        fsutil::write_atomic(&self.path, body).await?;
+        Ok(())
     }
 
     pub async fn get(&self) -> Settings {
@@ -894,10 +934,14 @@ mod tests {
     #[test]
     fn language_defaults_to_the_system_and_keeps_a_choice() {
         let s: Settings = serde_json::from_str(r#"{"ui":{"theme":"light"}}"#).unwrap();
-        assert_eq!(s.ui.language, Language::Auto);
+        assert_eq!(s.ui.language.code(), Language::AUTO);
         let s: Settings = serde_json::from_str(r#"{"ui":{"language":"ug"}}"#).unwrap();
         assert_eq!(s.ui.language.resolve(), gxs_core::i18n::Lang::Ug);
-        assert_eq!(serde_json::to_value(Language::En).unwrap(), "en");
+        // Old "zh" values and standard tags both resolve.
+        let s: Settings = serde_json::from_str(r#"{"ui":{"language":"zh"}}"#).unwrap();
+        assert_eq!(s.ui.language.resolve_code(), "zh-cn");
+        assert_eq!(serde_json::to_value(Language::new("en")).unwrap(), "en");
+        assert_eq!(serde_json::to_value(Language::new("fr")).unwrap(), "fr");
     }
 
     #[test]
@@ -967,7 +1011,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
     fn recent_paths_are_bounded_and_deduplicated() {
+        // Drives and case folding are Windows path semantics; the Linux build skips this.
         let mut s = Settings::default();
         let many: Vec<String> = (0..20).map(|i| format!(r"D:\dir{i}")).collect();
         let first = vec![r"D:\a".into(), r"d:\A".into(), "relative".into(), String::new()];
@@ -1038,7 +1084,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
     fn relative_paths_are_rejected() {
+        // Uses a drive path (D:\), so it only runs where backslash is a separator.
         let mut s = Settings::default();
         s.files.work_dir = "relative\\dir".into();
         assert!(s.normalize().is_err());

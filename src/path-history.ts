@@ -36,13 +36,3 @@ export async function getPathHistory(): Promise<string[]> {
   await ensureLoaded()
   return [...paths].reverse()
 }
-
-export async function clearPathHistory(): Promise<void> {
-  await ensureLoaded()
-  paths = []
-  try {
-    await invoke('save_path_history', { paths: [] })
-  } catch {
-    localStorage.removeItem(STORAGE_KEY)
-  }
-}

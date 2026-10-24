@@ -101,7 +101,7 @@ mod imp {
                 let bytes = &data[..data_len as usize];
                 let value = match kind {
                     REG_SZ | REG_EXPAND_SZ => {
-                        let units: Vec<u16> = bytes.chunks_exact(2).map(|p| u16::from_le_bytes([p[0], p[1]])).collect();
+                        let units: Vec<u16> = bytes.as_chunks::<2>().0.iter().map(|&p| u16::from_le_bytes(p)).collect();
                         let end = units.iter().position(|&u| u == 0).unwrap_or(units.len());
                         RegValue::Text(String::from_utf16_lossy(&units[..end]))
                     }

@@ -9,7 +9,7 @@ import { icon } from '../../icons'
 import type { PanelHost } from '../../layout'
 import { describeError, type ForwardView } from '../../protocol'
 import { activeSession, onActive, onConnected, onEnded, type SessionInfo } from '../../sessions'
-import type { BuiltinPlugin } from '../api'
+import type { BuiltinPlugin, PluginContext } from '../api'
 import { BUILTIN_VERSION } from './version'
 
 const t = messages({
@@ -75,7 +75,7 @@ function liveSsh(info: SessionInfo | null): number | null {
   return info?.kind === 'ssh' && info.state === 'live' ? info.id : null
 }
 
-function forwardsPanel(): PanelHost {
+function forwardsPanel(ctx: PluginContext): PanelHost {
   const title = h('span', { class: 'fwd-target' })
   const empty = h('p', { class: 'panel-empty' })
   const list = h('ul', { class: 'forward-list fwd-list', 'aria-label': t('listLabel') })
@@ -214,9 +214,10 @@ function forwardsPanel(): PanelHost {
   })
   onEnded(() => follow())
   // Counters change without any event; only poll while someone can see them.
-  window.setInterval(() => {
+  const timer = window.setInterval(() => {
     if (session !== null && element.offsetParent !== null) void refresh()
   }, POLL_MS)
+  ctx.subscriptions.add(() => clearInterval(timer))
   follow()
   return { element, shown: () => void refresh() }
 }
@@ -234,7 +235,7 @@ export const forwardsPlugin: BuiltinPlugin = {
       title: t('name'),
       icon: 'arrows-left-right',
       region: 'bottom',
-      build: forwardsPanel,
+      build: () => forwardsPanel(ctx),
     })
   },
 }

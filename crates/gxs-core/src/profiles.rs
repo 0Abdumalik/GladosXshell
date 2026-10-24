@@ -689,8 +689,21 @@ impl ProfileStore {
         self.mutate(move |data| {
             validate_input(&input, &data.groups, &data.servers)?;
             let vault = self.vault(data);
-            let sealed = input.auth.secret.seal(&vault)?;
-            let proxy_sealed = input.proxy_secret.seal(&vault)?;
+            // Only methods that actually keep a secret seal it; agent auth must not touch the
+            // vault at all (platforms without a secret backend reject sealing).
+            let sealed = if input.auth.method.keeps_secret() {
+                input.auth.secret.seal(&vault)?
+            } else {
+                None
+            };
+            // The proxy password is stored only when the proxy is on and has a user.
+            let proxy_sealed = if input.advanced.proxy.enabled()
+                && !input.advanced.proxy.user.trim().is_empty()
+            {
+                input.proxy_secret.seal(&vault)?
+            } else {
+                None
+            };
             let existing = match &input.id {
                 Some(id) => Some(
                     data.servers

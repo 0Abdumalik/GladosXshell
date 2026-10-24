@@ -22,6 +22,9 @@ use crate::profiles::{
 use crate::transport::ProxyKind;
 
 const MAX_FILE: u64 = 1024 * 1024;
+/// Total bytes a directory scan may read into memory, so a hostile folder cannot
+/// balloon the process: per-file reads are capped by MAX_FILE, this caps the sum.
+const MAX_SCAN_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_DEPTH: usize = 8;
 pub const MAX_CANDIDATES: usize = 5000;
 const NAME_CHARS: usize = 128;
@@ -36,8 +39,6 @@ pub enum Source {
     Putty,
     FinalShell,
 }
-
-pub const SOURCES: [Source; 4] = [Source::SshConfig, Source::Xshell, Source::Putty, Source::FinalShell];
 
 /// One connection found in another client, shown for review before it is saved.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -264,7 +265,7 @@ pub fn decode_text(bytes: &[u8]) -> String {
 }
 
 fn utf16(bytes: &[u8], read: fn([u8; 2]) -> u16) -> String {
-    let units: Vec<u16> = bytes.chunks_exact(2).map(|p| read([p[0], p[1]])).collect();
+    let units: Vec<u16> = bytes.as_chunks::<2>().0.iter().map(|&p| read(p)).collect();
     String::from_utf16_lossy(&units)
 }
 
@@ -804,7 +805,16 @@ fn scan_xshell(at: &Locations, path: Option<&Path>, out: &mut SourceScan) -> io:
     } else {
         walk(&root, |p| has_ext(p, "xsh"))?
     };
+    let mut budget = MAX_SCAN_BYTES;
     for (folders, file) in files {
+        if budget == 0 {
+            break;
+        }
+        let size = std::fs::metadata(&file).map_or(0, |m| m.len());
+        if size > budget {
+            continue;
+        }
+        budget -= size;
         let Ok(bytes) = read_small(&file) else { continue };
         let name = file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
         match xshell_session(&name, &decode_text(&bytes)) {
@@ -1051,6 +1061,8 @@ fn json_number(v: &Value, key: &str) -> Option<u64> {
 }
 
 /// Folder names FinalShell tends to be unpacked into, under each fixed drive.
+/// Only referenced by the Windows drive scan, so allow it to be unused elsewhere.
+#[cfg_attr(not(windows), allow(dead_code))]
 const FINALSHELL_PARENTS: &[&str] = &["", "Program Files", "Program Files (x86)", "Programs", "Software", "Soft", "Tools", "Apps"];
 
 /// Where FinalShell may be installed, most likely first. It keeps `conn` inside its install
@@ -1113,13 +1125,25 @@ fn scan_finalshell(at: &Locations, path: Option<&Path>, out: &mut SourceScan) ->
     } else {
         walk(&root, |p| has_ext(p, "json"))?
     };
-    let docs: Vec<(Vec<String>, Value)> = files
-        .into_iter()
-        .filter_map(|(folders, file)| {
-            let text = decode_text(&read_small(&file).ok()?);
-            Some((folders, serde_json::from_str(&text).ok()?))
-        })
-        .collect();
+    let mut docs = Vec::new();
+    let mut budget = MAX_SCAN_BYTES;
+    for (folders, file) in files {
+        if budget == 0 {
+            break;
+        }
+        let size = std::fs::metadata(&file).map_or(0, |m| m.len());
+        if size > budget {
+            continue;
+        }
+        budget -= size;
+        let Some(text) = read_small(&file).ok().map(|bytes| decode_text(&bytes)) else {
+            continue;
+        };
+        let Some(value) = serde_json::from_str(&text).ok() else {
+            continue;
+        };
+        docs.push((folders, value));
+    }
     let (candidates, skipped) = parse_finalshell(&docs);
     out.candidates = candidates;
     out.skipped = skipped;
@@ -1269,7 +1293,7 @@ fn link_info_path(info: &[u8]) -> Option<String> {
     };
     let wide = |at: usize| {
         let rest = info.get(at..)?;
-        let end = rest.chunks_exact(2).position(|p| p == [0, 0])?;
+        let end = rest.as_chunks::<2>().0.iter().position(|&p| p == [0, 0])?;
         Some(utf16(&rest[..end * 2], u16::from_le_bytes))
     };
     const VOLUME_AND_LOCAL_PATH: usize = 0x1;

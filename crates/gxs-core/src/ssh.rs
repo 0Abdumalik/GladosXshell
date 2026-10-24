@@ -12,6 +12,7 @@ use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, decode_secret_k
 use russh::{Channel, ChannelMsg, ChannelOpenFailure, ChannelStream, Disconnect};
 use russh_sftp::client::SftpSession;
 use serde::Serialize;
+use zeroize::Zeroizing;
 use tokio::net::TcpStream;
 use tokio::sync::{OnceCell, mpsc, oneshot};
 
@@ -46,11 +47,11 @@ pub trait KeyboardInteractive: Send + Sync {
 pub enum SshAuth {
     /// Falls back to keyboard-interactive (answering every prompt with the password) because
     /// many servers disable the plain password method.
-    Password(String),
+    Password(Zeroizing<String>),
     /// OpenSSH, PKCS#8 or PuTTY (.ppk) private key text.
     PrivateKey {
-        key: String,
-        passphrase: Option<String>,
+        key: Zeroizing<String>,
+        passphrase: Option<Zeroizing<String>>,
     },
     KeyboardInteractive(Arc<dyn KeyboardInteractive>),
     /// Every key the local SSH agent holds, in its order.
@@ -433,7 +434,7 @@ async fn jump_stream(jump: &SshClient, host: &str, port: u16, limit: Duration) -
 async fn authenticate(handle: &mut client::Handle<ClientHandler>, user: &str, auth: SshAuth) -> Result<bool> {
     match auth {
         SshAuth::Password(password) => {
-            if handle.authenticate_password(user, password.clone()).await?.success() {
+            if handle.authenticate_password(user, password.as_str().to_owned()).await?.success() {
                 return Ok(true);
             }
             let responder = PasswordResponder {
@@ -443,7 +444,7 @@ async fn authenticate(handle: &mut client::Handle<ClientHandler>, user: &str, au
             keyboard_interactive(handle, user, &responder).await
         }
         SshAuth::PrivateKey { key, passphrase } => {
-            let key = decode_secret_key(&key, passphrase.as_deref())?;
+            let key = decode_secret_key(&key, passphrase.as_ref().map(|p| p.as_str()))?;
             let hash = handle.best_supported_rsa_hash().await?.flatten();
             let key = PrivateKeyWithHashAlg::new(Arc::new(key), hash);
             Ok(handle.authenticate_publickey(user, key).await?.success())
@@ -506,7 +507,7 @@ pub fn key_is_encrypted(key: &str) -> bool {
 }
 
 struct PasswordResponder {
-    password: String,
+    password: Zeroizing<String>,
     answered: AtomicBool,
 }
 
@@ -515,7 +516,7 @@ impl KeyboardInteractive for PasswordResponder {
         // One round only: a second round means the server wants more than the password
         // (e.g. an OTP), which needs a real prompt.
         let first = !self.answered.swap(true, Ordering::AcqRel);
-        let answers = first.then(|| request.prompts.iter().map(|_| self.password.clone()).collect());
+        let answers = first.then(|| request.prompts.iter().map(|_| self.password.to_string()).collect());
         Box::pin(std::future::ready(answers))
     }
 }

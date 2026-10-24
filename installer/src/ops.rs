@@ -89,13 +89,35 @@ pub struct InstallOptions {
     pub start_menu: bool,
 }
 
+/// System folders that must never become the parent of an install: opening a data folder
+/// under them could damage the OS.
+fn is_system_parent(parent: &Path) -> bool {
+    let Some(name) = parent.file_name().and_then(|n| n.to_str()) else {
+        return true; // a drive root
+    };
+    matches!(
+        name.to_ascii_lowercase().as_str(),
+        "windows" | "system32" | "syswow64" | "programdata" | "windows.old" | "recycler" | "$recycle.bin"
+    )
+}
+
 pub fn install(options: &InstallOptions, progress: &mut dyn FnMut(f64, &str)) -> io::Result<()> {
-    let dir = &options.dir;
+    // The install target always ends in the product folder: a picked folder gets it appended
+    // and an explicit --dir must match the same shape, so a stray path (or a system folder)
+    // can never become the install root.
+    let dir = install_target(&options.dir);
     if !dir.is_absolute() {
         return Err(io::Error::other(tr!(
             "请选择一个完整的安装路径",
             "Choose a full install path",
             "تولۇق ئورنىتىش يولىنى تاللاڭ"
+        )));
+    }
+    if dir.parent().is_some_and(is_system_parent) {
+        return Err(io::Error::other(tr!(
+            "不能安装到系统目录，请换一个文件夹",
+            "Cannot install into a system folder; choose another one",
+            "سىستېما قىسقۇچىغا ئورنىتىشقا بولمايدۇ، باشقا بىر قىسقۇچ تاللاڭ"
         )));
     }
     if options.scope == Scope::Machine && !system::elevated() {
@@ -106,14 +128,20 @@ pub fn install(options: &InstallOptions, progress: &mut dyn FnMut(f64, &str)) ->
         )));
     }
     progress(0.02, &tr!("准备安装目录", "Preparing the install folder", "ئورنىتىش قىسقۇچى تەييارلىنىۋاتىدۇ"));
-    fs::create_dir_all(dir)?;
+    fs::create_dir_all(&dir)?;
+    // A machine-wide install lands in a protected folder (Program Files). Only the data
+    // subfolder is opened to standard users, so the program files stay read-only to them.
+    if options.scope == Scope::Machine {
+        #[cfg(windows)]
+        system::grant_users_write(&dir)?;
+    }
     if in_use(&dir.join(EXE)) {
         return Err(running_error());
     }
 
     let extracting = tr!("解压程序文件", "Extracting the program files", "پروگرامما ھۆججەتلىرى يېيىلىۋاتىدۇ");
     progress(0.05, &extracting);
-    let exe_size = extract(PAYLOAD, dir, &mut |f| progress(0.05 + f * 0.8, &extracting))?;
+    let exe_size = extract(PAYLOAD, &dir, &mut |f| progress(0.05 + f * 0.8, &extracting))?;
 
     progress(0.88, &tr!("写入卸载程序", "Writing the uninstaller", "ئۆچۈرگۈچ يېزىلىۋاتىدۇ"));
     let uninstaller = dir.join(UNINSTALLER);
@@ -134,7 +162,7 @@ pub fn install(options: &InstallOptions, progress: &mut dyn FnMut(f64, &str)) ->
 
     progress(0.97, &tr!("登记到系统", "Registering with Windows", "سىستېمىغا تىزىملىتىلىۋاتىدۇ"));
     let size_kb = u32::try_from((exe_size + uninstaller_size) / 1024).unwrap_or(u32::MAX);
-    system::register(options.scope, dir, size_kb)?;
+    system::register(options.scope, &dir, size_kb)?;
     progress(1.0, &tr!("安装完成", "Installation complete", "ئورنىتىش تاماملاندى"));
     Ok(())
 }
@@ -152,17 +180,13 @@ pub struct Installed {
     pub scope: Scope,
 }
 
-/// What this uninstaller removes: the registered install it sits in, any registered install, or
-/// the folder it sits in.
+/// What this uninstaller removes: only the registered install the uninstaller actually sits
+/// in. A copied uninstall.exe must not steer the deletion toward an arbitrary install.
 pub fn installed() -> Option<Installed> {
     let here = std::env::current_exe().ok().and_then(|exe| exe.parent().map(Path::to_path_buf));
-    let mut found = system::existing_installs();
-    let mine = found.iter().position(|e| here.as_deref().is_some_and(|h| same_file(h, &e.dir)));
-    if let Some(e) = mine.map(|i| found.swap_remove(i)).or_else(|| found.into_iter().next()) {
-        return Some(Installed { dir: e.dir, version: e.version, scope: e.scope });
-    }
-    let dir = here?;
-    dir.join(EXE).exists().then(|| Installed { dir, version: String::new(), scope: Scope::User })
+    let found = system::existing_installs();
+    let e = found.into_iter().find(|e| here.as_deref().is_some_and(|h| same_file(h, &e.dir)))?;
+    Some(Installed { dir: e.dir, version: e.version, scope: e.scope })
 }
 
 /// Something uninstalling could not delete. The window words it, so the path can be kept left to
@@ -225,6 +249,18 @@ pub fn uninstall(remove_data: bool, progress: &mut dyn FnMut(f64, &str)) -> io::
                     warnings.push(Warning::new(&data, &e));
                 }
                 _ => {}
+            }
+        }
+        // Data that lives beside the program: remove exactly what the app wrote, keep
+        // anything the user added to the install folder.
+        for item in system::install_data_items(&dir) {
+            let result = if item.is_dir() {
+                fs::remove_dir_all(&item)
+            } else {
+                fs::remove_file(&item)
+            };
+            if let Err(e) = result {
+                warnings.push(Warning::new(&item, &e));
             }
         }
     }

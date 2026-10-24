@@ -66,9 +66,9 @@ const MESSAGES = {
   install: { zh: '安装', en: 'Install', ug: 'ئورنىتىش' },
   installTitle: { zh: '安装 {product}', en: 'Install {product}', ug: '{product} نى ئورنىتىش' },
   installLead: {
-    zh: '设置、连接和密钥保存在 {dir}，每个用户各有一份。',
-    en: 'Settings, connections and keys live in {dir}, one set per user.',
-    ug: 'تەڭشەك، ئۇلىنىش ۋە ئاچقۇچلار {dir} دا ساقلىنىدۇ، ھەر بىر ئىشلەتكۈچىنىڭ ئايرىم بىر نۇسخىسى بولىدۇ.',
+    zh: '设置、连接和密钥保存在 {dir}。',
+    en: 'Settings, connections and keys live in {dir}.',
+    ug: 'تەڭشەك، ئۇلىنىش ۋە ئاچقۇچلار {dir} دا ساقلىنىدۇ.',
   },
   update: { zh: '更新', en: 'Update', ug: 'يېڭىلاش' },
   updateTitle: { zh: '更新到 {version}', en: 'Update to {version}', ug: '{version} گە يېڭىلاش' },

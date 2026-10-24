@@ -50,6 +50,7 @@ svg {
 }
 
 [hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: hidden state must always win. */
   display: none !important;
 }
 
@@ -623,7 +624,9 @@ input[type="text"]:disabled {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must be forced. */
     animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must be forced. */
     transition-duration: 0.01ms !important;
   }
 }

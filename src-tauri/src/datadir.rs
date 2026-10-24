@@ -1,6 +1,7 @@
-//! Where the app keeps its data: `%USERPROFILE%\.gladosxshell`, or a `data` folder beside the
-//! program for a portable copy. Versions before this kept it in `%APPDATA%` (settings, connections,
-//! keys) and `%LOCALAPPDATA%` (the WebView profile); those are moved over on first start.
+//! Where the app keeps its data: beside the program for an installed copy (Windows), in
+//! `%USERPROFILE%\.gladosxshell` for a development run, or in a `data` folder beside the program
+//! for a portable copy. Versions before this kept it in `%APPDATA%` (settings, connections, keys)
+//! and `%LOCALAPPDATA%` (the WebView profile); those are moved over on first start.
 
 use std::fs;
 use std::io;
@@ -92,12 +93,38 @@ impl Note {
     }
 }
 
+/// Where an installed copy keeps its data: the `data` folder beside the program, which the
+/// installer creates and opens to standard users (the program folder itself stays read-only).
+/// `None` means fall back to the user profile: development runs, protected folders, or an
+/// install whose data folder the installer did not create.
+fn installed_root(exe_dir: Option<&Path>) -> Option<PathBuf> {
+    exe_dir
+        .map(|d| d.join(PORTABLE))
+        .filter(|d| d.is_dir() && is_writable(d))
+}
+
+/// True when a probe file can be created and removed here; metadata's readonly flag is not
+/// enough for ACL-protected folders such as Program Files.
+fn is_writable(dir: &Path) -> bool {
+    let probe = dir.join(format!(".gxs-write-{}", std::process::id()));
+    match std::fs::OpenOptions::new().write(true).create_new(true).open(&probe) {
+        Ok(_) => std::fs::remove_file(&probe).is_ok(),
+        Err(_) => false,
+    }
+}
+
 pub fn prepare(exe_dir: Option<&Path>, home: &Path, identifier: &str, legacy: &Legacy) -> Prepared {
     if let Some(portable) = exe_dir.map(|d| d.join(PORTABLE)).filter(|d| d.is_dir()) {
         // A portable copy starts on its own; taking the installed copy's data would strand it.
         return Prepared { root: portable, note: None };
     }
-    let root = home.join(folder_name(identifier));
+    // An installed copy keeps its data in `data` beside the program (created and opened to
+    // standard users by the installer); a protected folder falls back to the profile.
+    let root = if cfg!(windows) {
+        installed_root(exe_dir).unwrap_or_else(|| home.join(folder_name(identifier)))
+    } else {
+        home.join(folder_name(identifier))
+    };
     let mut events = Vec::new();
     let mut level = Level::Info;
     if let Some(old) = &legacy.data {
@@ -263,6 +290,58 @@ mod tests {
         copy_dir(old.data.as_ref().unwrap(), &to).unwrap();
         assert_eq!(fs::read(to.join("keys").join("id")).unwrap(), b"k");
         assert_eq!(fs::read(to.join("connections.json")).unwrap(), b"{}");
+        fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn program_files_install_falls_back_to_the_profile() {
+        use std::process::Command;
+        let base = temp_dir("program-files");
+        let exe_dir = base.join("app");
+        fs::create_dir_all(exe_dir.join(PORTABLE)).unwrap();
+        // Take away the current user's write right on the data folder, as Program Files does.
+        let status = Command::new("icacls")
+            .arg(exe_dir.join(PORTABLE))
+            .arg("/deny")
+            .arg("*S-1-5-32-545:(OI)(CI)W")
+            .arg("/q")
+            .status()
+            .unwrap();
+        assert!(status.success());
+        assert_eq!(installed_root(Some(&exe_dir)), None);
+        // Restore the ACL on the data folder (where the deny lives) so cleanup can remove it.
+        let status = Command::new("icacls")
+            .arg(exe_dir.join(PORTABLE))
+            .arg("/remove:d")
+            .arg("*S-1-5-32-545")
+            .arg("/q")
+            .status()
+            .unwrap();
+        assert!(status.success());
+        fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn installed_data_lives_in_a_data_folder_beside_the_program_when_writable() {
+        let base = temp_dir("beside");
+        let exe_dir = base.join("app");
+        fs::create_dir_all(exe_dir.join(PORTABLE)).unwrap();
+        assert_eq!(installed_root(Some(&exe_dir)).unwrap(), exe_dir.join(PORTABLE));
+        fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn protected_folders_fall_back_to_the_profile() {
+        use std::os::unix::fs::PermissionsExt;
+        let base = temp_dir("protected");
+        let exe_dir = base.join("app");
+        let data = exe_dir.join(PORTABLE);
+        fs::create_dir_all(&data).unwrap();
+        fs::set_permissions(&data, fs::Permissions::from_mode(0o555)).unwrap();
+        assert_eq!(installed_root(Some(&exe_dir)), None);
+        fs::set_permissions(&data, fs::Permissions::from_mode(0o755)).unwrap();
         fs::remove_dir_all(&base).unwrap();
     }
 }

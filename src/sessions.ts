@@ -349,10 +349,6 @@ export function allSessions(): SessionInfo[] {
   return [...tabs.values()].map((t) => t.info)
 }
 
-export function liveSshSessions(): SessionInfo[] {
-  return [...tabs.values()].map((t) => t.info).filter((i) => i.kind === 'ssh' && i.state === 'live')
-}
-
 /**
  * Shows a badge on a tab and sets `data-mark-<mark>` on it and its terminal; a null label
  * removes both. Marks survive reconnects.
@@ -448,11 +444,6 @@ async function attachLog(entry: Tab): Promise<string> {
   entry.tab.toggleAttribute('data-logging', true)
   setTitle(entry, entry.info.title)
   return path
-}
-
-/** The log file a tab is writing to, if any. */
-export function sessionLogPath(key: number): string | null {
-  return tabs.get(key)?.log?.path ?? null
 }
 
 /** "Start/stop logging" for a tab's menus. */

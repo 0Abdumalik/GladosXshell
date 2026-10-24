@@ -879,7 +879,7 @@ fn sort_by_cpu(all: &mut [Process]) {
 
 fn top_processes(all: &mut [Process]) -> Vec<Process> {
     let mut keep = std::collections::HashSet::new();
-    all.sort_by(|a, b| b.mem_bytes.cmp(&a.mem_bytes));
+    all.sort_by_key(|p| std::cmp::Reverse(p.mem_bytes));
     keep.extend(all.iter().take(TOP_N).map(|p| p.pid));
     sort_by_cpu(all);
     keep.extend(all.iter().take(TOP_N).map(|p| p.pid));

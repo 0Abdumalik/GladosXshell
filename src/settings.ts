@@ -20,6 +20,7 @@ import type { KnownHost } from './protocol'
 import { openSession } from './sessions'
 import { backupSection } from './settings-backup'
 import { appearanceSection, filesSection } from './settings-files'
+import { languageSection } from './settings-language'
 import { layoutSection, type Section, statusSection } from './settings-layout'
 import { masterSection } from './settings-master'
 import { onSettings } from './settings-store'
@@ -358,6 +359,7 @@ export function openSettings(initial = 'layout'): void {
     filesSection(report),
     editorSection(report),
     appearanceSection(report),
+    languageSection(report),
     pluginsSection(report),
     ...contributedSections(report),
     masterSection(report),

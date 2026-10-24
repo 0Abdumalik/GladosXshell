@@ -10,6 +10,7 @@ use gxs_core::forward::{Forward, ForwardKind, ForwardSpec};
 use gxs_core::ssh::{self, ConnectOptions, KbdRequest, KeyboardInteractive, SshAuth, SshClient, Via};
 use gxs_core::transport::{Proxy, ProxyKind};
 use gxs_core::{Error, PumpConfig};
+use zeroize::Zeroizing;
 use russh::keys::ssh_key::LineEnding;
 use russh::keys::{Algorithm, PrivateKey, PublicKey};
 use russh::server::{self, Auth, ChannelOpenHandle, Msg, Response, Session};
@@ -269,7 +270,7 @@ fn options(server: &TestServer, known_hosts: Arc<KnownHosts>, policy: HostKeyPol
 }
 
 fn password() -> SshAuth {
-    SshAuth::Password("secret".into())
+    SshAuth::Password(Zeroizing::new("secret".into()))
 }
 
 async fn connect_ok(server: &TestServer, known_hosts: Arc<KnownHosts>, policy: HostKeyPolicy) -> SshClient {
@@ -426,7 +427,7 @@ async fn wrong_password_fails_auth() {
         &server,
         known,
         HostKeyPolicy::Tofu,
-        SshAuth::Password("nope".into()),
+        SshAuth::Password(Zeroizing::new("nope".into())),
     ))
     .await
     .err()
@@ -448,7 +449,7 @@ async fn public_key_auth_including_encrypted_key() {
 
     let plain = server.client_key.to_openssh(LineEnding::LF).unwrap().to_string();
     let auth = SshAuth::PrivateKey {
-        key: plain,
+        key: Zeroizing::new(plain),
         passphrase: None,
     };
     ssh::connect(options(&server, known.clone(), HostKeyPolicy::Tofu, auth))
@@ -469,8 +470,8 @@ async fn public_key_auth_including_encrypted_key() {
         &server.client_key.to_openssh(LineEnding::LF).unwrap()
     ));
     let auth = SshAuth::PrivateKey {
-        key: encrypted.clone(),
-        passphrase: Some("hunter2".into()),
+        key: Zeroizing::new(encrypted.clone()),
+        passphrase: Some(Zeroizing::new("hunter2".into())),
     };
     ssh::connect(options(&server, known.clone(), HostKeyPolicy::Strict, auth))
         .await
@@ -479,8 +480,8 @@ async fn public_key_auth_including_encrypted_key() {
         .await;
 
     let auth = SshAuth::PrivateKey {
-        key: encrypted,
-        passphrase: Some("wrong".into()),
+        key: Zeroizing::new(encrypted),
+        passphrase: Some(Zeroizing::new("wrong".into())),
     };
     assert!(matches!(
         ssh::connect(options(&server, known, HostKeyPolicy::Strict, auth))

@@ -224,8 +224,23 @@ pub async fn plugin_http(
             "تەلەپ مەزمۇنى ئەڭ كۆپ بولغاندا 1 MB"
         )));
     }
+    // Hop-by-hop, framing and credential headers never pass through: a plugin could
+    // otherwise smuggle requests or probe downstream services with forged credentials.
+    const FORBIDDEN: &[&str] = &[
+        "host", "content-length", "transfer-encoding", "connection", "upgrade",
+        "keep-alive", "te", "trailer", "authorization", "proxy-authorization",
+        "cookie", "proxy-connection",
+    ];
     let mut map = header::HeaderMap::new();
     for (name, value) in headers {
+        if FORBIDDEN.contains(&name.to_ascii_lowercase().as_str()) {
+            let name = ltr(&name);
+            return Err(invalid(tr!(
+                "请求头 {name} 不允许由插件设置",
+                "The request header {name} cannot be set by a plugin",
+                "{name} تەلەپ بېشىنى پلاگىن بەلگىلىيەلمەيدۇ"
+            )));
+        }
         let name = header::HeaderName::from_bytes(name.as_bytes()).map_err(|_| {
             let name = ltr(&name);
             invalid(tr!(

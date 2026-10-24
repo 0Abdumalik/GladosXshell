@@ -10,6 +10,7 @@ use gxs_core::Error;
 use gxs_core::known_hosts::{HostKeyPolicy, KnownHosts};
 use gxs_core::sftp::{EntryKind, Existing, Progress, Sftp};
 use gxs_core::ssh::{self, ConnectOptions, SshAuth, SshClient};
+use zeroize::Zeroizing;
 use russh::keys::{Algorithm, PrivateKey};
 use russh::server::{self, Auth, ChannelOpenHandle, Msg, Session};
 use russh::{Channel, ChannelId};
@@ -528,7 +529,7 @@ async fn fixture(seed: impl FnOnce(&mut Fs)) -> Fixture {
         host: "127.0.0.1".into(),
         port,
         user: "gxs".into(),
-        auth: SshAuth::Password("secret".into()),
+        auth: SshAuth::Password(Zeroizing::new("secret".into())),
         policy: HostKeyPolicy::Tofu,
         known_hosts: known,
         prompter: None,
@@ -759,11 +760,14 @@ async fn cancelled_transfers_resume_from_their_part_files() {
     .await;
     let tmp = tempfile::tempdir().unwrap();
     let slow = |on: bool| f.fs.lock().unwrap().slow = on;
+    // Cancel only after at least 1 MiB is on disk, so the part file always exists and is
+    // never complete when the token fires. An immediate "any progress" cancel races the
+    // transfer-completion edge under heavy parallel load (a completed download has no part).
     let cancel_once_started = || {
         let cancel = CancellationToken::new();
         let token = cancel.clone();
         (cancel, move |p: Progress| {
-            if p.bytes_done > 0 {
+            if p.bytes_done >= 1024 * 1024 {
                 token.cancel();
             }
         })
@@ -780,7 +784,17 @@ async fn cancelled_transfers_resume_from_their_part_files() {
         .unwrap_err();
     assert!(matches!(err, Error::Cancelled), "{err}");
     assert!(!target.exists());
-    let kept = std::fs::metadata(&part).unwrap().len();
+    // One in-flight chunk can still land on the part file just after the cancelled call
+    // returns; wait until it stops growing before reading the size to resume from.
+    let mut kept = std::fs::metadata(&part).unwrap().len();
+    for _ in 0..50 {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        let now = std::fs::metadata(&part).unwrap().len();
+        if now == kept {
+            break;
+        }
+        kept = now;
+    }
     assert!(kept > 0 && kept < big.len() as u64, "{kept}");
 
     slow(false);

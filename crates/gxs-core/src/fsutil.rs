@@ -16,19 +16,32 @@ pub fn write_atomic_blocking(path: &Path, body: &[u8]) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
-    tmp_name.push(format!(".{}.tmp", std::process::id()));
-    let tmp = path.with_file_name(tmp_name);
-    let result = (|| {
-        let mut file = std::fs::File::create(&tmp)?;
-        file.write_all(body)?;
-        file.sync_all()?;
-        std::fs::rename(&tmp, path)
-    })();
-    if result.is_err() {
-        let _ = std::fs::remove_file(&tmp);
+    let dir = path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+    // A fresh random temp name opened with create_new (O_EXCL) never follows a
+    // pre-placed symlink, and two concurrent writers cannot step on the same file.
+    loop {
+        let nonce: u64 = rand::random();
+        let tmp = dir.join(format!("{name}.{}.{nonce}.tmp", std::process::id()));
+        match std::fs::OpenOptions::new().write(true).create_new(true).open(&tmp) {
+            Ok(mut file) => {
+                let result = (|| {
+                    file.write_all(body)?;
+                    file.sync_all()?;
+                    std::fs::rename(&tmp, path)
+                })();
+                if result.is_err() {
+                    let _ = std::fs::remove_file(&tmp);
+                }
+                return result;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e),
+        }
     }
-    result
 }
 
 /// `None` when the file does not exist; other I/O errors propagate.

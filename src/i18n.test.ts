@@ -26,7 +26,7 @@ afterEach(() => setLang('zh'))
 describe('i18n', () => {
   it('starts in Chinese outside the app', () => {
     expect(lang()).toBe('zh')
-    expect(locale()).toBe('zh-CN')
+    expect(locale()).toBe('zh-cn')
     expect(isRtl()).toBe(false)
   })
 

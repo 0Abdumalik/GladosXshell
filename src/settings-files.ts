@@ -6,7 +6,6 @@ import { common } from './i18n-common'
 import { namedIcon } from './icons'
 import { hooksBrowser } from './settings-hooks'
 import { insertDeclaration } from './settings-hooks-model'
-import { languageField } from './settings-language'
 import type { Section } from './settings-layout'
 import { type Settings, validLocalPath } from './settings-model'
 import { recentPaths, recentPathsCombo, rememberRecent } from './settings-paths'
@@ -405,11 +404,9 @@ export function appearanceSection(report: Report): Section {
     note.textContent = t('importedSaved', { name: ltr(name) })
   }
 
-  const language = languageField(report)
   const element = h(
     'div',
     { class: 'settings-section' },
-    language.element,
     h('h3', { text: t('display') }),
     scale.element,
     h('h3', { text: t('theme') }),
@@ -506,7 +503,6 @@ export function appearanceSection(report: Report): Section {
   void load()
   const refresh = () => {
     refreshTheme()
-    language.refresh()
     scale.refresh()
     hooks.update()
   }

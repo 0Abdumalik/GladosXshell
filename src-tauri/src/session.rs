@@ -23,6 +23,7 @@ use tauri::{Emitter, Manager, State};
 use tokio::sync::oneshot;
 use zeroize::Zeroizing;
 
+use crate::keys;
 use crate::monitor::{EVENT_ENDED, SharedCache};
 use crate::session_log::{self, LogSlot};
 use crate::{AppState, Prompts, Result};
@@ -364,26 +365,31 @@ async fn connect_one(
     let whom = ltr(&format!("{}@{}:{}", target.user, target.host, target.port));
     let auth = match target.method {
         AuthMethod::Password => SshAuth::Password(match target.secret.take() {
-            Some(secret) => secret.to_string(),
-            None => asker.secret(&title, &whom, &tr!("密码：", "Password:", "ئىم:")).await?,
+            Some(secret) => Zeroizing::new(secret.to_string()),
+            None => Zeroizing::new(asker.secret(&title, &whom, &tr!("密码：", "Password:", "ئىم:")).await?),
         }),
         AuthMethod::KeyFile => {
-            let key = tokio::fs::read_to_string(&target.key_path).await.map_err(|e| {
-                let path = ltr(&target.key_path);
-                Error::Io(std::io::Error::new(
-                    e.kind(),
-                    tr!(
-                        "无法读取私钥 {path}：{e}",
-                        "Could not read the private key {path}: {e}",
-                        "{path} شەخسىي ئاچقۇچىنى ئوقۇغىلى بولمىدى: {e}"
-                    ),
-                ))
-            })?;
+            // Only keys inside the app's key library are accepted: a forged profile must
+            // not make the app sign with an arbitrary private key file on disk.
+            let key_path = keys::library_key(&keys::key_dir(state), &target.key_path).await?;
+            let key = Zeroizing::new(
+                tokio::fs::read_to_string(&key_path).await.map_err(|e| {
+                    let path = ltr(&key_path.to_string_lossy());
+                    Error::Io(std::io::Error::new(
+                        e.kind(),
+                        tr!(
+                            "无法读取私钥 {path}：{e}",
+                            "Could not read the private key {path}: {e}",
+                            "{path} شەخسىي ئاچقۇچىنى ئوقۇغىلى بولمىدى: {e}"
+                        ),
+                    ))
+                })?,
+            );
             let passphrase = match target.secret.take() {
-                Some(secret) => Some(secret.to_string()),
+                Some(secret) => Some(Zeroizing::new(secret.to_string())),
                 None if ssh::key_is_encrypted(&key) => {
                     let prompt = tr!("私钥口令：", "Passphrase:", "ئىم ئىبارىسى:");
-                    Some(asker.secret(&title, &whom, &prompt).await?)
+                    Some(Zeroizing::new(asker.secret(&title, &whom, &prompt).await?))
                 }
                 None => None,
             };

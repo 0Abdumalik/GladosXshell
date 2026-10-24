@@ -7,6 +7,7 @@ mod diagnostics;
 mod files;
 mod forwards;
 mod keys;
+mod languages;
 mod library;
 mod monitor;
 mod plugin_api;
@@ -101,7 +102,15 @@ fn open_error(e: tauri_plugin_opener::Error) -> Error {
 /// Runs before any page script, so the frontend knows its language while modules load.
 /// Windows opened from the frontend pass it in the URL instead.
 pub(crate) fn lang_script() -> String {
-    format!("window.__GX_LANG__ = '{}';", gxs_core::i18n::current().code())
+    let code = gxs_core::i18n::current_code();
+    let rtl = gxs_core::i18n::is_rtl();
+    let packs = gxs_core::i18n::pack_json(&code);
+    format!(
+        "window.__GX_LANG__ = {}; window.__GX_RTL__ = {}; window.__GX_PACKS__ = {};",
+        serde_json::to_string(&code).unwrap_or_else(|_| "\"en\"".into()),
+        rtl,
+        packs
+    )
 }
 
 /// Language changes apply on the next start.
@@ -129,7 +138,14 @@ pub fn run() {
                 &config_dir,
                 documents.join("GladosXshell"),
             ));
-            gxs_core::i18n::set(tauri::async_runtime::block_on(settings.get()).ui.language.resolve());
+            // Packs must be in memory before any message is written.
+            gxs_core::i18n::init_packs(Some(&config_dir));
+            let language = tauri::async_runtime::block_on(settings.get()).ui.language;
+            if tauri::async_runtime::block_on(settings.created()) {
+                // First run: pin the detected system language so it is visible and stable.
+                let _ = tauri::async_runtime::block_on(settings.set_language(language.resolve_code()));
+            }
+            gxs_core::i18n::set(&language.resolve_code());
             let (known_hosts, profiles, favorites, history, path_history, log) = tauri::async_runtime::block_on(async {
                 let (log, log_problem) = JsonStore::open(config_dir.join("app_log.json"), false).await;
                 let log = applog::AppLog::new(log);
@@ -319,6 +335,9 @@ pub fn run() {
             files::reveal_local,
             files::open_url,
             app_restart,
+            languages::languages_list,
+            languages::language_pack_import,
+            languages::language_pack_remove,
             settings::settings_get,
             settings::settings_set,
             settings::custom_css_get,

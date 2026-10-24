@@ -28,7 +28,7 @@ English · [简体中文](README.zh-CN.md) · [ئۇيغۇرچە](README.ug.md)
 - **Live monitoring.** CPU, memory, disks, network, latency and processes, plus a separate window with charts and a process manager.
 - **Secrets stay on your machine.** Connections, keys and passwords are handled in the Rust core. Saved passwords are encrypted with Windows DPAPI, or with a master password if you set one.
 - **Extensible.** Every built-in feature is a plugin and can be turned off. Third-party plugins run sandboxed and use only the permissions you grant.
-- **Three languages.** English, Chinese and Uyghur. Uyghur gets a full right-to-left layout.
+- **Three languages, plus language packs.** English, Chinese and Uyghur out of the box (Uyghur gets a full right-to-left layout), and you can import more languages as Cheat-Engine-style packs. Anything a pack does not cover falls back to English.
 
 ## Quick start
 
@@ -87,7 +87,7 @@ You need 64-bit Windows 10 or 11 with the WebView2 runtime, which Windows 11 and
 - Three layout presets.
 - Dark and light themes.
 - Terminal fonts, a background image and custom CSS.
-- The interface language is set in Settings → Appearance and applies after a restart.
+- The language follows your system on first launch (English when nothing matches) and is set in Settings → Appearance → Language; a restart applies a change. Import, list and remove packs from the same panel.
 
 ## Plugins
 
@@ -102,6 +102,22 @@ Plugins are written in JavaScript and run in a sandboxed frame. They reach the a
 | Type declarations | [`sdk/gx.d.ts`](sdk/gx.d.ts) |
 | Examples | [`examples/plugins`](examples/plugins): `hello` (commands, menus, a panel) and `disk-alert` (runs `df` and warns in the status bar) |
 | Translation | `locales` in `plugin.json`; read the interface language from `gx.lang` |
+
+## Languages and language packs
+
+Language packs work like Cheat Engine's `.lng` files: a pack maps **English source text** to another language, and anything the pack does not cover falls back to English. The built-in three (English, Chinese, Uyghur) ship inside the binary; imported packs are stored under `<data>/locales/<code>.json` and can override or extend them.
+
+```json
+{
+  "meta": { "code": "fr", "name": "French", "nativeName": "Français", "rtl": false },
+  "translations": { "Ready": "Prêt", "Connect": "Se connecter", ... }
+}
+```
+
+- `meta.code` is a [BCP 47](https://en.wikipedia.org/wiki/IETF_language_tag) tag (`fr`, `ja`, `pt-BR`, …); near-misses like `zh` or `zh_CN` are folded to the built-in `zh-CN`.
+- `meta.name` is the language name in English and `meta.nativeName` its name in itself, shown in the picker.
+- `meta.rtl` turns on the right-to-left layout (used by the built-in Uyghur pack).
+- `translations` keys are the English source texts, exactly as they appear in the app; the built-in packs in [`locales/`](locales/) are the ready-made reference. Regenerate them after adding messages with `node scripts/extract-i18n.mjs`.
 
 ## Build from source
 

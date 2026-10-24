@@ -151,7 +151,7 @@ pub fn list_ports() -> Result<Vec<PortInfo>> {
             PortInfo { name: p.port_name, description }
         })
         .collect();
-    list.sort_by(|a, b| natural_key(&a.name).cmp(&natural_key(&b.name)));
+    list.sort_by_key(|p| natural_key(&p.name));
     Ok(list)
 }
 

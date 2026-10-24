@@ -33,7 +33,7 @@ fn invalid(message: impl Into<String>) -> Error {
     Error::Invalid(message.into())
 }
 
-fn key_dir(state: &AppState) -> PathBuf {
+pub(crate) fn key_dir(state: &AppState) -> PathBuf {
     state.config_dir.join(KEYS)
 }
 
@@ -79,7 +79,7 @@ async fn read_key(path: &Path) -> Result<Zeroizing<String>> {
 }
 
 /// A path the frontend sent back, accepted only if it names a key in the library.
-async fn library_key(dir: &Path, path: &str) -> Result<PathBuf> {
+pub(crate) async fn library_key(dir: &Path, path: &str) -> Result<PathBuf> {
     let path = PathBuf::from(check_path(path, &tr!("密钥路径", "key path", "ئاچقۇچ يولى"))?);
     let missing = || invalid(tr!("密钥库里没有这个密钥", "This key is not in the key library", "ئاچقۇچ ئامبىرىدا بۇ ئاچقۇچ يوق"));
     let (Ok(dir), Ok(real)) = (tokio::fs::canonicalize(dir).await, tokio::fs::canonicalize(&path).await) else {
@@ -112,6 +112,12 @@ async fn save(dir: &Path, name: &str, private: Zeroizing<String>, info: KeyInfo)
     }
     fsutil::write_atomic(&path, private.as_bytes().to_vec()).await?;
     fsutil::write_atomic(dir.join(format!("{name}.pub")), format!("{}\n", info.public).into_bytes()).await?;
+    // A private key belongs to its owner alone (OpenSSH convention); the umask is not enough.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+    }
     Ok(stored(&path, info))
 }
 

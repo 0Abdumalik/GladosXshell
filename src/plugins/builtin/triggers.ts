@@ -43,9 +43,10 @@ const t = messages({
     ug: '«{name}» قوزغاتقۇچى · {where}: {text}',
   },
   notifyLog: {
-    zh: '触发器「{name}」在 {where} 匹配：{text}',
-    en: 'Trigger "{name}" matched in {where}: {text}',
-    ug: '«{name}» قوزغاتقۇچى ماس كەلدى ({where}): {text}',
+    // The matched text stays out of the log: terminal output must never be recorded.
+    zh: '触发器「{name}」在 {where} 匹配',
+    en: 'Trigger "{name}" matched in {where}',
+    ug: '«{name}» قوزغاتقۇچى ماس كەلدى ({where})',
   },
   mark: { zh: '提醒', en: 'Alert', ug: 'ئەسكەرتىش' },
   repeated: {
@@ -209,7 +210,8 @@ function watch(host: TerminalHost, rules: () => Active[], ctx: PluginContext): D
     ctx.ui.status(
       t('notifyStatus', { name: clip(title(rule), 40), where, text: ltr(clip(text, 120)) }),
     )
-    logApp('info', t('notifyLog', { name: title(rule), where, text: ltr(clip(text, 300)) }))
+    // Terminal output (which may contain passwords) is never written to the app log.
+    logApp('info', t('notifyLog', { name: title(rule), where }))
     const focused = document.hasFocus()
     if (info && (!focused || activeSession()?.key !== info.key)) {
       marked.add(info.key)

@@ -36,6 +36,12 @@ fn loopback() -> String {
     "127.0.0.1".into()
 }
 
+/// True for the loopback forms a no-auth listener may bind.
+fn is_loopback(host: &str) -> bool {
+    host.eq_ignore_ascii_case("localhost")
+        || host.parse::<std::net::IpAddr>().is_ok_and(|ip| ip.is_loopback())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ForwardSpec {
@@ -63,6 +69,15 @@ impl ForwardSpec {
                 "ئاڭلاش ئادرېسى بوش ياكى بوشلۇق بار بولسا بولمايدۇ"
             ))
         })?;
+        // A no-auth SOCKS5 proxy must never listen beyond the loopback: anyone on the LAN
+        // could borrow the user's SSH session without any credentials.
+        if self.kind == ForwardKind::Dynamic && !is_loopback(self.bind_host.trim()) {
+            return Err(Error::invalid(crate::tr!(
+                "动态代理（SOCKS5）只能绑定本机回环地址（127.0.0.1）",
+                "Dynamic (SOCKS5) forwards can only bind a loopback address (127.0.0.1)",
+                "دىنامىك (SOCKS5) يوللاش پەقەت ئۆز قۇرۇلمىسى ئادرېسىغا (127.0.0.1) باغلانالايدۇ"
+            )));
+        }
         if self.kind != ForwardKind::Dynamic {
             validate_host(self.dest_host.trim()).map_err(|_| {
                 Error::invalid(crate::tr!(
@@ -524,6 +539,10 @@ mod tests {
         let taken = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = taken.local_addr().unwrap().port();
         let err = bind("127.0.0.1", port).await.unwrap_err();
-        assert!(err.to_string().contains("已被占用"), "{err}");
+        // The message renders in the current global language, which parallel tests
+        // may change at any time, so accept any of the three built-ins.
+        let text = err.to_string();
+        let markers = ["已被占用", "is in use", "ئىگىلىۋېلىنغان"];
+        assert!(markers.iter().any(|m| text.contains(m)), "{err}");
     }
 }

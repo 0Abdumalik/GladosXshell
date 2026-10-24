@@ -171,6 +171,32 @@ pub fn user_data_dir() -> io::Result<PathBuf> {
     Ok(env_dir("USERPROFILE")?.join(FLAVOR.data_folder))
 }
 
+/// Gives standard users Modify rights on the install folder's `data` subfolder, which Program
+/// Files otherwise keeps read-only for them. Only the data folder is opened: the program folder
+/// stays read-only, so no one can replace the program or the uninstaller. The install folder
+/// itself is rejected (or made a product subfolder) before this is called.
+#[cfg(windows)]
+pub fn grant_users_write(install_dir: &Path) -> io::Result<()> {
+    // *S-1-5-32-545 is BUILTIN\Users; (OI)(CI) makes the right inherit to children.
+    let data = install_dir.join("data");
+    std::fs::create_dir_all(&data)?;
+    let status = Command::new("icacls")
+        .arg(&data)
+        .arg("/grant")
+        .arg("*S-1-5-32-545:(OI)(CI)M")
+        .arg("/q")
+        .status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(tr!(
+            "无法为数据目录设置写入权限",
+            "Could not grant write access to the data folder",
+            "سانلىق مەلۇمات قىسقۇچىغا يېزىش ھوقۇقى بېرىلمىدى"
+        )))
+    }
+}
+
 /// Folders the app itself writes: settings, connections and keys, and the WebView profile. Older
 /// versions used AppData, and a portable copy keeps them in `data` beside the program.
 pub fn data_dirs(install_dir: &Path) -> Vec<PathBuf> {
@@ -180,6 +206,31 @@ pub fn data_dirs(install_dir: &Path) -> Vec<PathBuf> {
         .chain([install_dir.join("data")])
         .chain(legacy.map(|dir| dir.join(FLAVOR.identifier)))
         .collect()
+}
+
+/// The files and folders the program itself writes inside the install folder. Since data now
+/// lives beside the program, uninstalling with data removal deletes exactly these entries and
+/// nothing the user added to the folder.
+pub fn install_data_items(install_dir: &Path) -> Vec<PathBuf> {
+    const ITEMS: &[&str] = &[
+        "Language",
+        "locales",
+        "webview",
+        "keys",
+        "plugins",
+        "plugin-data",
+        "settings.json",
+        "connections.json",
+        "known_hosts.json",
+        "app_log.json",
+        "favorites.json",
+        "command_history.json",
+        "path_history.json",
+        "open_tabs.json",
+        "custom.css",
+        "plugins.json",
+    ];
+    ITEMS.iter().map(|name| install_dir.join(name)).filter(|p| p.exists()).collect()
 }
 
 pub struct Shortcuts {
@@ -227,8 +278,14 @@ pub fn existing_installs() -> Vec<Existing> {
         .filter_map(|scope| {
             let key = scope.hive().open_subkey(uninstall_key()).ok()?;
             let dir: String = key.get_value("InstallLocation").ok()?;
+            let dir = PathBuf::from(&dir);
+            // A forged registry entry must not steer the uninstaller anywhere: the location
+            // has to be absolute and actually hold the program.
+            if !dir.is_absolute() || !dir.join(EXE).exists() {
+                return None;
+            }
             let version: String = key.get_value("DisplayVersion").unwrap_or_default();
-            Some(Existing { dir: PathBuf::from(dir), version, scope })
+            Some(Existing { dir, version, scope })
         })
         .collect()
 }

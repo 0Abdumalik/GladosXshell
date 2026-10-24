@@ -8,7 +8,7 @@
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use des::Des;
-use des::cipher::{Block, BlockCipherDecrypt, KeyInit};
+use des::cipher::{BlockCipherDecrypt, KeyInit};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::error::{Error, Result};
@@ -115,9 +115,8 @@ pub fn decrypt(saved: &str) -> Result<Zeroizing<String>> {
     key.zeroize();
     let cipher = cipher?;
     let mut plain = Zeroizing::new(raw[HEADER..].to_vec());
-    for chunk in plain.chunks_exact_mut(BLOCK) {
-        let block: &mut Block<Des> = chunk.try_into().map_err(|_| unreadable())?;
-        cipher.decrypt_block(block);
+    for chunk in plain.as_chunks_mut::<BLOCK>().0 {
+        cipher.decrypt_block(chunk.into());
     }
     let pad = usize::from(*plain.last().ok_or_else(unreadable)?);
     if pad == 0 || pad > BLOCK || !plain[plain.len() - pad..].iter().all(|&b| usize::from(b) == pad) {
@@ -140,9 +139,8 @@ mod tests {
         let mut data = plain.as_bytes().to_vec();
         let pad = BLOCK - data.len() % BLOCK;
         data.extend(std::iter::repeat_n(pad as u8, pad));
-        for chunk in data.chunks_exact_mut(BLOCK) {
-            let block: &mut Block<Des> = chunk.try_into().unwrap();
-            cipher.encrypt_block(block);
+        for chunk in data.as_chunks_mut::<BLOCK>().0 {
+            cipher.encrypt_block(chunk.into());
         }
         STANDARD.encode([head.as_slice(), &data].concat())
     }
